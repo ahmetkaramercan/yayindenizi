@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum BookCategory {
+  PARAGRAF
+  DENEME
+  KONU
+}
+
+// ─── User ───────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  role         Role
+  adSoyad      String   @map("ad_soyad")
+  il           String   @default("")
+  ilce         String   @default("")
+  okul         String?
+  ogretmenKodu String?  @unique @map("ogretmen_kodu")
+
+  teacherOf TeacherStudent[] @relation("TeacherRelation")
+  studentOf TeacherStudent[] @relation("StudentRelation")
+  results   Result[]
+  analytics Analytics[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([role])
+  @@map("users")
+}
+
+// ─── TeacherStudent ─────────────────────────────────────────────────────────
+
+model TeacherStudent {
+  id        String   @id @default(uuid())
+  teacherId String   @map("teacher_id")
+  studentId String   @map("student_id")
+
+  teacher User @relation("TeacherRelation", fields: [teacherId], references: [id], onDelete: Cascade)
+  student User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([teacherId, studentId])
+  @@index([studentId])
+  @@map("teacher_students")
+}
+
+// ─── Book ───────────────────────────────────────────────────────────────────
+
+model Book {
+  id          String       @id @default(uuid())
+  title       String
+  description String       @default("")
+  imageUrl    String?      @map("image_url")
+  category    BookCategory
+
+  sections Section[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("books")
+}
+
+// ─── Section ────────────────────────────────────────────────────────────────
+
+model Section {
+  id          String @id @default(uuid())
+  title       String
+  description String @default("")
+  orderIndex  Int    @default(0) @map("order_index")
+  bookId      String @map("book_id")
+
+  book      Book        @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tests     Test[]
+  analytics Analytics[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([bookId])
+  @@map("sections")
+}
+
+// ─── Test ───────────────────────────────────────────────────────────────────
+
+model Test {
+  id          String @id @default(uuid())
+  title       String
+  description String @default("")
+  level       Int    @default(1) // 1-8
+  timeLimit   Int    @default(0) @map("time_limit") // seconds
+  sectionId   String @map("section_id")
+
+  section   Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  questions Question[]
+  results   Result[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([sectionId])
+  @@index([level])
+  @@map("tests")
+}
+
+// ─── Question ───────────────────────────────────────────────────────────────
+
+model Question {
+  id                 String  @id @default(uuid())
+  text               String  @default("")
+  optionA            String  @default("A") @map("option_a")
+  optionB            String  @default("B") @map("option_b")
+  optionC            String  @default("C") @map("option_c")
+  optionD            String  @default("D") @map("option_d")
+  optionE            String  @default("E") @map("option_e")
+  correctAnswerIndex Int     @map("correct_answer_index") // 0-4 (A-E)
+  explanation        String  @default("")
+  videoUrl           String? @map("video_url")
+  orderIndex         Int     @default(0) @map("order_index")
+  testId             String  @map("test_id")
+  learningOutcomeId  String? @map("learning_outcome_id")
+
+  test            Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
+  learningOutcome LearningOutcome? @relation(fields: [learningOutcomeId], references: [id], onDelete: SetNull)
+  answers         Answer[]
+
+  @@index([testId])
+  @@map("questions")
+}
+
+// ─── Answer ─────────────────────────────────────────────────────────────────
+
+model Answer {
+  id            String  @id @default(uuid())
+  resultId      String  @map("result_id")
+  questionId    String  @map("question_id")
+  selectedIndex Int?    @map("selected_index") // 0-4 (A-E), null = boş
+  isCorrect     Boolean @default(false) @map("is_correct")
+
+  result   Result   @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([resultId, questionId])
+  @@index([questionId])
+  @@map("answers")
+}
+
+// ─── Result ─────────────────────────────────────────────────────────────────
+
+model Result {
+  id         String    @id @default(uuid())
+  userId     String    @map("user_id")
+  testId     String    @map("test_id")
+  score      Float     @default(0)
+  totalTime  Int       @default(0) @map("total_time") // seconds
+  startedAt  DateTime  @default(now()) @map("started_at")
+  finishedAt DateTime? @map("finished_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  test    Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([testId])
+  @@map("results")
+}
+
+// ─── Analytics ──────────────────────────────────────────────────────────────
+
+model Analytics {
+  id               String @id @default(uuid())
+  userId           String @map("user_id")
+  sectionId        String @map("section_id")
+
+  totalTests       Int   @default(0) @map("total_tests")
+  totalQuestions   Int   @default(0) @map("total_questions")
+  correctAnswers   Int   @default(0) @map("correct_answers")
+  incorrectAnswers Int   @default(0) @map("incorrect_answers")
+  averageScore     Float @default(0) @map("average_score")
+  bestScore        Float @default(0) @map("best_score")
+  totalTime        Int   @default(0) @map("total_time") // seconds
+  accuracy         Float @default(0)
+  lastAttemptAt    DateTime? @map("last_attempt_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, sectionId])
+  @@index([userId])
+  @@map("analytics")
+}
+
+// ─── Supporting ─────────────────────────────────────────────────────────────
+
+model LearningOutcome {
+  id          String @id @default(uuid())
+  name        String
+  description String @default("")
+  category    String
+
+  questions Question[]
+
+  @@map("learning_outcomes")
+}
