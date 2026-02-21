@@ -34,10 +34,11 @@ model User {
   okul         String?
   ogretmenKodu String?  @unique @map("ogretmen_kodu")
 
-  teacherOf TeacherStudent[] @relation("TeacherRelation")
-  studentOf TeacherStudent[] @relation("StudentRelation")
-  results   Result[]
-  analytics Analytics[]
+  teacherOf      TeacherStudent[] @relation("TeacherRelation")
+  studentOf      TeacherStudent[] @relation("StudentRelation")
+  results        Result[]
+  analytics      Analytics[]
+  studentAnswers StudentAnswer[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -142,6 +143,7 @@ model Question {
   test            Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
   learningOutcome LearningOutcome? @relation(fields: [learningOutcomeId], references: [id], onDelete: SetNull)
   answers         Answer[]
+  studentAnswers  StudentAnswer[]
 
   @@index([testId])
   @@map("questions")
@@ -211,6 +213,26 @@ model Analytics {
   @@unique([userId, sectionId])
   @@index([userId])
   @@map("analytics")
+}
+
+// ─── StudentAnswer ──────────────────────────────────────────────────────────
+
+model StudentAnswer {
+  id            String  @id @default(uuid())
+  userId        String  @map("user_id")
+  questionId    String  @map("question_id")
+  selectedIndex Int     @map("selected_index") // 0-4 (A-E)
+  isCorrect     Boolean @default(false) @map("is_correct")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, questionId])
+  @@index([userId])
+  @@index([questionId])
+  @@map("student_answers")
 }
 
 // ─── Supporting ─────────────────────────────────────────────────────────────
