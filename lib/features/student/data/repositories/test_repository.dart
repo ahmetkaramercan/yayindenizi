@@ -102,6 +102,14 @@ class TestRepository {
     return [];
   }
 
+  Future<Map<String, dynamic>?> getResultForTest(String testId) async {
+    final data = await _api.get('/results/my', queryParameters: {'testId': testId});
+    if (data is List && data.isNotEmpty) {
+      return data.first as Map<String, dynamic>;
+    }
+    return null;
+  }
+
   // ─── Helpers ───────────────────────────────────────────────────────────
 
   Question _questionFromJson(Map<String, dynamic> q) {

@@ -1,12 +1,18 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 
 export interface OutcomeStat {
   learningOutcomeId: string;
+  code: string;
   learningOutcomeName: string;
   category: string;
   totalQuestions: number;
   correctAnswers: number;
+  incorrectAnswers: number;
   accuracy: number;
 }
 
@@ -25,9 +31,29 @@ export interface SectionStat {
 export class AnalyticsService {
   constructor(private prisma: PrismaService) {}
 
-  async getStudentOverview(userId: string) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+  // ─── Helpers ────────────────────────────────────────────────────────────
+
+  async verifyTeacherAccess(teacherId: string, studentId: string) {
+    const relation = await this.prisma.teacherStudent.findUnique({
+      where: { teacherId_studentId: { teacherId, studentId } },
+    });
+    if (!relation) {
+      throw new ForbiddenException('Bu öğrenci sizinle bağlantılı değil');
+    }
+  }
+
+  private async ensureUserExists(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
     if (!user) throw new NotFoundException('User not found');
+  }
+
+  // ─── Overview ───────────────────────────────────────────────────────────
+
+  async getStudentOverview(userId: string) {
+    await this.ensureUserExists(userId);
 
     const analytics = await this.prisma.analytics.findMany({
       where: { userId },
@@ -51,9 +77,13 @@ export class AnalyticsService {
     const totalIncorrect = analytics.reduce((s, a) => s + a.incorrectAnswers, 0);
     const totalTime = analytics.reduce((s, a) => s + a.totalTime, 0);
 
-    const weightedScore = analytics.reduce((s, a) => s + a.averageScore * a.totalTests, 0);
+    const weightedScore = analytics.reduce(
+      (s, a) => s + a.averageScore * a.totalTests,
+      0,
+    );
     const averageScore = totalTests > 0 ? weightedScore / totalTests : 0;
-    const overallAccuracy = totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
+    const overallAccuracy =
+      totalQuestions > 0 ? (totalCorrect / totalQuestions) * 100 : 0;
 
     return {
       totalTests,
@@ -65,6 +95,8 @@ export class AnalyticsService {
       totalTime,
     };
   }
+
+  // ─── Section stats ──────────────────────────────────────────────────────
 
   async getStudentSectionStats(userId: string): Promise<SectionStat[]> {
     const analytics = await this.prisma.analytics.findMany({
@@ -85,46 +117,97 @@ export class AnalyticsService {
     }));
   }
 
-  async getStudentLearningOutcomeStats(userId: string): Promise<OutcomeStat[]> {
-    const answers = await this.prisma.answer.findMany({
-      where: { result: { userId } },
+  // ─── Learning outcome stats (reads from materialized table) ─────────
+
+  async getStudentLearningOutcomeStats(
+    userId: string,
+  ): Promise<OutcomeStat[]> {
+    const rows = await this.prisma.outcomeAnalytics.findMany({
+      where: { userId },
       include: {
-        question: { include: { learningOutcome: true } },
+        learningOutcome: { select: { id: true, code: true, name: true, category: true } },
       },
+      orderBy: { accuracy: 'asc' },
     });
 
-    const outcomeMap = new Map<string, OutcomeStat>();
+    return rows.map((r) => ({
+      learningOutcomeId: r.learningOutcomeId,
+      code: r.learningOutcome.code,
+      learningOutcomeName: r.learningOutcome.name,
+      category: r.learningOutcome.category,
+      totalQuestions: r.totalQuestions,
+      correctAnswers: r.correctAnswers,
+      incorrectAnswers: r.incorrectAnswers,
+      accuracy: r.accuracy,
+    }));
+  }
 
-    for (const answer of answers) {
-      const lo = answer.question.learningOutcome;
-      if (!lo) continue;
+  // ─── Outcome stats grouped by category ──────────────────────────────
 
-      const existing = outcomeMap.get(lo.id);
+  async getStudentOutcomesByCategory(userId: string) {
+    const stats = await this.getStudentLearningOutcomeStats(userId);
+
+    const categoryMap = new Map<
+      string,
+      { total: number; correct: number; outcomes: number }
+    >();
+
+    for (const s of stats) {
+      const existing = categoryMap.get(s.category);
       if (existing) {
-        existing.totalQuestions++;
-        if (answer.isCorrect) existing.correctAnswers++;
+        existing.total += s.totalQuestions;
+        existing.correct += s.correctAnswers;
+        existing.outcomes++;
       } else {
-        outcomeMap.set(lo.id, {
-          learningOutcomeId: lo.id,
-          learningOutcomeName: lo.name,
-          category: lo.category,
-          totalQuestions: 1,
-          correctAnswers: answer.isCorrect ? 1 : 0,
-          accuracy: 0,
+        categoryMap.set(s.category, {
+          total: s.totalQuestions,
+          correct: s.correctAnswers,
+          outcomes: 1,
         });
       }
     }
 
-    return Array.from(outcomeMap.values())
-      .map((s) => ({
-        ...s,
+    return Array.from(categoryMap.entries())
+      .map(([category, data]) => ({
+        category,
+        outcomeCount: data.outcomes,
+        totalQuestions: data.total,
+        correctAnswers: data.correct,
         accuracy:
-          s.totalQuestions > 0
-            ? Math.round((s.correctAnswers / s.totalQuestions) * 10000) / 100
+          data.total > 0
+            ? Math.round((data.correct / data.total) * 10000) / 100
             : 0,
       }))
       .sort((a, b) => a.accuracy - b.accuracy);
   }
+
+  // ─── Weak outcomes ──────────────────────────────────────────────────────
+
+  async getStudentWeakOutcomes(
+    userId: string,
+    threshold = 50,
+  ): Promise<OutcomeStat[]> {
+    const rows = await this.prisma.outcomeAnalytics.findMany({
+      where: { userId, accuracy: { lt: threshold } },
+      include: {
+        learningOutcome: { select: { id: true, code: true, name: true, category: true } },
+      },
+      orderBy: { accuracy: 'asc' },
+    });
+
+    return rows.map((r) => ({
+      learningOutcomeId: r.learningOutcomeId,
+      code: r.learningOutcome.code,
+      learningOutcomeName: r.learningOutcome.name,
+      category: r.learningOutcome.category,
+      totalQuestions: r.totalQuestions,
+      correctAnswers: r.correctAnswers,
+      incorrectAnswers: r.incorrectAnswers,
+      accuracy: r.accuracy,
+    }));
+  }
+
+  // ─── Progress over time ─────────────────────────────────────────────────
 
   async getStudentProgressOverTime(userId: string) {
     const results = await this.prisma.result.findMany({
@@ -147,36 +230,80 @@ export class AnalyticsService {
     }));
   }
 
-  async getStudentWeakSections(userId: string, threshold = 50): Promise<SectionStat[]> {
+  // ─── Weak sections ─────────────────────────────────────────────────────
+
+  async getStudentWeakSections(
+    userId: string,
+    threshold = 50,
+  ): Promise<SectionStat[]> {
     const stats = await this.getStudentSectionStats(userId);
     return stats.filter((s) => s.accuracy < threshold);
   }
 
+  // ─── Full analysis ──────────────────────────────────────────────────────
+
   async getStudentFullAnalysis(userId: string) {
-    const [overview, sectionStats, learningOutcomeStats, progressOverTime, weakSections] =
-      await Promise.all([
-        this.getStudentOverview(userId),
-        this.getStudentSectionStats(userId),
-        this.getStudentLearningOutcomeStats(userId),
-        this.getStudentProgressOverTime(userId),
-        this.getStudentWeakSections(userId),
-      ]);
+    const [
+      overview,
+      sectionStats,
+      learningOutcomeStats,
+      outcomesByCategory,
+      progressOverTime,
+      weakSections,
+      weakOutcomes,
+    ] = await Promise.all([
+      this.getStudentOverview(userId),
+      this.getStudentSectionStats(userId),
+      this.getStudentLearningOutcomeStats(userId),
+      this.getStudentOutcomesByCategory(userId),
+      this.getStudentProgressOverTime(userId),
+      this.getStudentWeakSections(userId),
+      this.getStudentWeakOutcomes(userId),
+    ]);
+
+    // Flutter uyumluluğu: root seviyede totalTests, overallSuccess, learningOutcomes
+    const learningOutcomes = learningOutcomeStats.map((s) => ({
+      id: s.learningOutcomeId,
+      learningOutcomeId: s.learningOutcomeId,
+      name: s.learningOutcomeName,
+      description: s.category,
+      totalQuestions: s.totalQuestions,
+      completedQuestions: s.totalQuestions,
+      correctAnswers: s.correctAnswers,
+      incorrectAnswers: s.incorrectAnswers,
+      completionPercentage: 100,
+      successPercentage: s.accuracy,
+    }));
 
     return {
       overview,
       sectionStats,
       learningOutcomeStats,
+      outcomesByCategory,
       progressOverTime,
       weakSections,
+      weakOutcomes,
+      // Flutter / öğretmen paneli için
+      totalTests: overview.totalTests,
+      overallSuccess: overview.overallAccuracy,
+      totalCorrect: overview.totalCorrect,
+      totalIncorrect: overview.totalIncorrect,
+      learningOutcomes,
     };
   }
+
+  // ─── Single test breakdown ──────────────────────────────────────────────
 
   async getTestAnalysis(resultId: string) {
     const result = await this.prisma.result.findUnique({
       where: { id: resultId },
       include: {
         answers: {
-          include: { question: { include: { learningOutcome: true } } },
+          include: {
+            question: {
+              include: { learningOutcome: { select: { id: true, code: true, name: true, category: true } } },
+            },
+          },
         },
         test: { include: { section: true } },
       },
@@ -186,7 +313,7 @@ export class AnalyticsService {
 
     const outcomeBreakdown = new Map<
       string,
-      { name: string; category: string; total: number; correct: number }
+      { code: string; name: string; category: string; total: number; correct: number }
     >();
 
     for (const answer of result.answers) {
@@ -199,6 +326,7 @@ export class AnalyticsService {
         if (answer.isCorrect) existing.correct++;
       } else {
         outcomeBreakdown.set(lo.id, {
+          code: lo.code,
           name: lo.name,
           category: lo.category,
           total: 1,
@@ -212,7 +340,9 @@ export class AnalyticsService {
     const incorrectCount = result.answers.filter(
       (a) => !a.isCorrect && a.selectedIndex != null,
     ).length;
-    const skippedCount = result.answers.filter((a) => a.selectedIndex == null).length;
+    const skippedCount = result.answers.filter(
+      (a) => a.selectedIndex == null,
+    ).length;
 
     return {
       resultId: result.id,
@@ -230,12 +360,16 @@ export class AnalyticsService {
             ? Math.round((correctCount / totalQuestions) * 10000) / 100
             : 0,
       },
-      learningOutcomeBreakdown: Array.from(outcomeBreakdown.entries()).map(([id, data]) => ({
-        learningOutcomeId: id,
-        ...data,
-        accuracy:
-          data.total > 0 ? Math.round((data.correct / data.total) * 10000) / 100 : 0,
-      })),
+      learningOutcomeBreakdown: Array.from(outcomeBreakdown.entries()).map(
+        ([id, data]) => ({
+          learningOutcomeId: id,
+          ...data,
+          accuracy:
+            data.total > 0
+              ? Math.round((data.correct / data.total) * 10000) / 100
+              : 0,
+        }),
+      ),
       answers: result.answers.map((a) => ({
         questionId: a.questionId,
         questionText: a.question.text,
@@ -246,5 +380,72 @@ export class AnalyticsService {
         learningOutcome: a.question.learningOutcome?.name ?? null,
       })),
     };
+  }
+
+  // ─── Recalculate outcome analytics (admin/migration utility) ────────
+
+  async recalculateOutcomeAnalytics(userId: string) {
+    // Hem questions.learning_outcome_id hem question_outcomes
+    const rows = await this.prisma.$queryRaw<
+      { learning_outcome_id: string; total: bigint; correct: bigint }[]
+    >`
+      SELECT outcome_id AS learning_outcome_id,
+             COUNT(*)::bigint AS total,
+             SUM(CASE WHEN is_correct THEN 1 ELSE 0 END)::bigint AS correct
+      FROM (
+        SELECT q.learning_outcome_id AS outcome_id, a.is_correct
+        FROM answers a
+        JOIN results r ON a.result_id = r.id
+        JOIN questions q ON a.question_id = q.id
+        WHERE r.user_id = ${userId} AND q.learning_outcome_id IS NOT NULL
+        UNION ALL
+        SELECT qo.learning_outcome_id AS outcome_id, a.is_correct
+        FROM answers a
+        JOIN results r ON a.result_id = r.id
+        JOIN question_outcomes qo ON a.question_id = qo.question_id
+        JOIN questions q ON a.question_id = q.id
+        WHERE r.user_id = ${userId} AND q.learning_outcome_id IS NULL
+      ) sub
+      GROUP BY outcome_id
+    `;
+
+    const now = new Date();
+
+    await this.prisma.$transaction(
+      rows.map((row) => {
+        const total = Number(row.total);
+        const correct = Number(row.correct);
+        const incorrect = total - correct;
+        const accuracy =
+          total > 0 ? Math.round((correct / total) * 10000) / 100 : 0;
+
+        return this.prisma.outcomeAnalytics.upsert({
+          where: {
+            userId_learningOutcomeId: {
+              userId,
+              learningOutcomeId: row.learning_outcome_id,
+            },
+          },
+          update: {
+            totalQuestions: total,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            accuracy,
+            lastAttemptAt: now,
+          },
+          create: {
+            userId,
+            learningOutcomeId: row.learning_outcome_id,
+            totalQuestions: total,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            accuracy,
+            lastAttemptAt: now,
+          },
+        });
+      }),
+    );
+
+    return { recalculated: rows.length };
   }
 }

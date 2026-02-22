@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { SubmitTestResultDto } from './dto';
 
@@ -11,16 +12,50 @@ export class TestResultsService {
   async submit(userId: string, dto: SubmitTestResultDto) {
     const test = await this.prisma.test.findUnique({
       where: { id: dto.testId },
-      include: { questions: true, section: true },
+      include: {
+        questions: {
+          include: { questionOutcomes: { select: { learningOutcomeId: true } } },
+        },
+        section: true,
+      },
     });
     if (!test) throw new NotFoundException('Test bulunamadı');
 
-    // Duplicate prevention: aynı öğrenci aynı testi tekrar gönderemez
     const existing = await this.prisma.result.findFirst({
       where: { userId, testId: dto.testId },
+      include: {
+        answers: {
+          include: { question: { select: { id: true, correctAnswerIndex: true, learningOutcomeId: true, orderIndex: true } } },
+          orderBy: { question: { orderIndex: 'asc' } },
+        },
+        test: { select: { id: true, title: true, level: true, questions: true } },
+      },
     });
+
     if (existing) {
-      throw new ConflictException('Bu testi zaten çözdünüz. Her test yalnızca bir kez gönderilebilir.');
+      this.logger.log(`Returning existing result for student ${userId}, test ${dto.testId}`);
+      const totalQuestions = existing.test.questions.length;
+      const correctCount = existing.answers.filter((a) => a.isCorrect).length;
+      const wrongCount = existing.answers.filter((a) => !a.isCorrect && a.selectedIndex != null).length;
+      const emptyCount = totalQuestions - correctCount - wrongCount;
+
+      return {
+        resultId: existing.id,
+        testId: existing.testId,
+        testTitle: existing.test.title,
+        score: Math.round(existing.score * 100) / 100,
+        totalQuestions,
+        correctCount,
+        wrongCount,
+        emptyCount,
+        alreadySubmitted: true,
+        answers: existing.answers.map((a) => ({
+          questionId: a.questionId,
+          selectedIndex: a.selectedIndex,
+          correctAnswerIndex: a.question.correctAnswerIndex,
+          isCorrect: a.isCorrect,
+        })),
+      };
     }
 
     const questionMap = new Map(test.questions.map((q) => [q.id, q]));
@@ -71,7 +106,23 @@ export class TestResultsService {
 
     this.logger.log(`Student ${userId} submitted test ${dto.testId}: ${correctCount}/${totalQuestions}`);
 
-    await this.updateAnalytics(userId, test.sectionId);
+    const affectedOutcomeIds = [
+      ...new Set(
+        test.questions.flatMap((q) => {
+          const ids: string[] = [];
+          if (q.learningOutcomeId) ids.push(q.learningOutcomeId);
+          ids.push(
+            ...q.questionOutcomes.map((qo) => qo.learningOutcomeId),
+          );
+          return ids;
+        }),
+      ),
+    ];
+
+    await Promise.all([
+      this.updateAnalytics(userId, test.sectionId),
+      this.updateOutcomeAnalytics(userId, affectedOutcomeIds),
+    ]);
 
     return {
       resultId: result.id,
@@ -185,5 +236,73 @@ export class TestResultsService {
         lastAttemptAt: new Date(),
       },
     });
+  }
+
+  private async updateOutcomeAnalytics(userId: string, learningOutcomeIds: string[]) {
+    if (learningOutcomeIds.length === 0) return;
+
+    // Hem questions.learning_outcome_id hem question_outcomes tablosunu kullan
+    // (seed-outcomes QuestionOutcome ile bağlar, questions.learning_outcome_id kullanmaz)
+    const rows = await this.prisma.$queryRaw<
+      { learning_outcome_id: string; total: bigint; correct: bigint }[]
+    >`
+      SELECT outcome_id AS learning_outcome_id,
+             COUNT(*)::bigint AS total,
+             SUM(CASE WHEN is_correct THEN 1 ELSE 0 END)::bigint AS correct
+      FROM (
+        SELECT q.learning_outcome_id AS outcome_id, a.is_correct
+        FROM answers a
+        JOIN results r ON a.result_id = r.id
+        JOIN questions q ON a.question_id = q.id
+        WHERE r.user_id = ${userId}
+          AND q.learning_outcome_id IN (${Prisma.join(learningOutcomeIds)})
+        UNION ALL
+        SELECT qo.learning_outcome_id AS outcome_id, a.is_correct
+        FROM answers a
+        JOIN results r ON a.result_id = r.id
+        JOIN question_outcomes qo ON a.question_id = qo.question_id
+        JOIN questions q ON a.question_id = q.id
+        WHERE r.user_id = ${userId}
+          AND q.learning_outcome_id IS NULL
+          AND qo.learning_outcome_id IN (${Prisma.join(learningOutcomeIds)})
+      ) sub
+      GROUP BY outcome_id
+    `;
+
+    const now = new Date();
+
+    await Promise.all(
+      rows.map((row) => {
+        const total = Number(row.total);
+        const correct = Number(row.correct);
+        const incorrect = total - correct;
+        const accuracy = total > 0 ? Math.round((correct / total) * 10000) / 100 : 0;
+
+        return this.prisma.outcomeAnalytics.upsert({
+          where: {
+            userId_learningOutcomeId: {
+              userId,
+              learningOutcomeId: row.learning_outcome_id,
+            },
+          },
+          update: {
+            totalQuestions: total,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            accuracy,
+            lastAttemptAt: now,
+          },
+          create: {
+            userId,
+            learningOutcomeId: row.learning_outcome_id,
+            totalQuestions: total,
+            correctAnswers: correct,
+            incorrectAnswers: incorrect,
+            accuracy,
+            lastAttemptAt: now,
+          },
+        });
+      }),
+    );
   }
 }

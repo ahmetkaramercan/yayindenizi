@@ -68,6 +68,33 @@ class _TopicTestPageState extends ConsumerState<TopicTestPage> {
       );
     }
 
+    if (topicState.alreadySolved && topicState.currentTopicResult != null) {
+      final correctMap = <int, int>{};
+      final savedAnswers = <int, int?>{};
+      for (int i = 0; i < test.questions.length; i++) {
+        correctMap[i] = test.questions[i].correctAnswerIndex;
+        final answer = topicState.currentTopicResult!.answers.where(
+          (a) => a.questionId == test.questions[i].id,
+        );
+        if (answer.isNotEmpty) {
+          savedAnswers[i] = answer.first.selectedAnswerIndex;
+        }
+      }
+
+      return Scaffold(
+        appBar: AppBar(title: Text('${test.title} - Sonuç')),
+        body: OpticalFormResult(
+          questionCount: test.questions.length,
+          studentAnswers: savedAnswers,
+          correctAnswers: correctMap,
+          onClose: () {
+            ref.read(topicProvider.notifier).resetCurrentTest();
+            context.pop();
+          },
+        ),
+      );
+    }
+
     if (_showResult && topicState.currentTopicResult != null) {
       final correctMap = <int, int>{};
       for (int i = 0; i < test.questions.length; i++) {

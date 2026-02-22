@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/mock_test.dart';
 import '../../domain/entities/mock_test_result.dart';
@@ -10,6 +11,7 @@ class MockTestState {
   final MockTestResult? currentResult;
   final bool isLoading;
   final String? error;
+  final bool alreadySolved;
 
   MockTestState({
     this.tests = const [],
@@ -17,6 +19,7 @@ class MockTestState {
     this.currentResult,
     this.isLoading = false,
     this.error,
+    this.alreadySolved = false,
   });
 
   MockTestState copyWith({
@@ -25,6 +28,7 @@ class MockTestState {
     MockTestResult? currentResult,
     bool? isLoading,
     String? error,
+    bool? alreadySolved,
   }) {
     return MockTestState(
       tests: tests ?? this.tests,
@@ -32,6 +36,7 @@ class MockTestState {
       currentResult: currentResult,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      alreadySolved: alreadySolved ?? this.alreadySolved,
     );
   }
 }
@@ -96,15 +101,94 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
         questions: fullTest.questions,
       );
 
+      final existingResult = await _checkExistingResult(testId, mockTest);
+      if (existingResult != null) {
+        _saveResult(existingResult);
+        state = state.copyWith(
+          currentTest: mockTest,
+          currentResult: existingResult,
+          isLoading: false,
+          alreadySolved: true,
+        );
+        return;
+      }
+
       state = state.copyWith(
         currentTest: mockTest,
         isLoading: false,
+        alreadySolved: false,
       );
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
       );
+    }
+  }
+
+  Future<MockTestResult?> _checkExistingResult(String testId, MockTest test) async {
+    try {
+      final data = await _testRepo.getResultForTest(testId);
+      if (data == null) return null;
+
+      final answersData = data['answers'] as List? ?? [];
+      final answerResults = <MockAnswerResult>[];
+
+      for (final a in answersData) {
+        final answer = a as Map<String, dynamic>;
+        final question = answer['question'] as Map<String, dynamic>?;
+        final selectedIndex = answer['selectedIndex'] as int?;
+        final isCorrect = answer['isCorrect'] == true;
+
+        AnswerStatus status;
+        if (selectedIndex == null) {
+          status = AnswerStatus.empty;
+        } else if (isCorrect) {
+          status = AnswerStatus.correct;
+        } else {
+          status = AnswerStatus.wrong;
+        }
+
+        answerResults.add(MockAnswerResult(
+          questionId: answer['questionId'] ?? '',
+          selectedAnswerIndex: selectedIndex,
+          status: status,
+          correctAnswerIndex: question?['correctAnswerIndex'] ?? 0,
+        ));
+      }
+
+      final totalQuestions = answerResults.length;
+      final correctAnswers = answerResults.where((a) => a.status == AnswerStatus.correct).length;
+      final wrongAnswers = answerResults.where((a) => a.status == AnswerStatus.wrong).length;
+      final emptyAnswers = answerResults.where((a) => a.status == AnswerStatus.empty).length;
+      final successPercentage = totalQuestions > 0
+          ? (correctAnswers / totalQuestions) * 100
+          : 0.0;
+
+      final learningOutcomeStats = <String, int>{};
+      for (final answer in answerResults) {
+        if (answer.status == AnswerStatus.correct) {
+          final q = test.questions.where((q) => q.id == answer.questionId);
+          final outcomeId = q.isNotEmpty ? (q.first.learningOutcome?.id ?? 'general') : 'general';
+          learningOutcomeStats[outcomeId] = (learningOutcomeStats[outcomeId] ?? 0) + 1;
+        }
+      }
+
+      return MockTestResult(
+        testId: testId,
+        testTitle: test.title,
+        answers: answerResults,
+        totalQuestions: totalQuestions,
+        correctAnswers: correctAnswers,
+        wrongAnswers: wrongAnswers,
+        emptyAnswers: emptyAnswers,
+        successPercentage: successPercentage,
+        completedAt: DateTime.tryParse(data['finishedAt']?.toString() ?? '') ?? DateTime.now(),
+        learningOutcomeStats: learningOutcomeStats,
+      );
+    } catch (e) {
+      dev.log('Failed to check existing result: $e', name: 'MockTestNotifier');
+      return null;
     }
   }
 
@@ -205,7 +289,10 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
         answers: answerList,
         totalTime: 0,
       );
-    } catch (_) {}
+      dev.log('Test result submitted for test $testId', name: 'MockTestNotifier');
+    } catch (e) {
+      dev.log('Failed to submit test result: $e', name: 'MockTestNotifier');
+    }
   }
 }
 

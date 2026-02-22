@@ -5,7 +5,6 @@ import '../../../../core/widgets/cards/app_card.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../student/domain/entities/student.dart';
 import '../../../student/domain/entities/student_analysis.dart';
@@ -30,7 +29,8 @@ class StudentDetailPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
-            onPressed: () => _showDeleteDialog(context, ref, detailState.student),
+            onPressed: () =>
+                _showDeleteDialog(context, ref, detailState.student),
             tooltip: 'Öğrenciyi Sil',
           ),
         ],
@@ -88,7 +88,8 @@ class StudentDetailPage extends ConsumerWidget {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(width: AppConstants.paddingM),
+                                    const SizedBox(
+                                        width: AppConstants.paddingM),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -109,18 +110,18 @@ class StudentDetailPage extends ConsumerWidget {
                                             ),
                                           ),
                                           if (detailState.student!.il != null ||
-                                              detailState.student!.ilce != null)
-                                            ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${detailState.student!.il ?? ''} ${detailState.student!.ilce ?? ''}'
-                                                    .trim(),
-                                                style: AppTextStyles.caption
-                                                    .copyWith(
-                                                  color: AppColors.textSecondary,
-                                                ),
+                                              detailState.student!.ilce !=
+                                                  null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              '${detailState.student!.il ?? ''} ${detailState.student!.ilce ?? ''}'
+                                                  .trim(),
+                                              style: AppTextStyles.caption
+                                                  .copyWith(
+                                                color: AppColors.textSecondary,
                                               ),
-                                            ],
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),
@@ -143,46 +144,36 @@ class StudentDetailPage extends ConsumerWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 20),
                                 SizedBox(
-                                  width: 120,
-                                  height: 120,
-                                  child: Stack(
-                                    alignment: Alignment.center,
-                                    children: [
-                                      CircularProgressIndicator(
-                                        value: detailState.analysis!
-                                                .overallSuccessPercentage /
-                                            100,
-                                        strokeWidth: 12,
-                                        backgroundColor: AppColors.border,
-                                        valueColor: AlwaysStoppedAnimation<Color>(
-                                          _getSuccessColor(detailState.analysis!
-                                              .overallSuccessPercentage),
-                                        ),
-                                      ),
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            '${detailState.analysis!.overallSuccessPercentage.toInt()}%',
-                                            style: AppTextStyles.h3.copyWith(
-                                              color: _getSuccessColor(
-                                                  detailState.analysis!
-                                                      .overallSuccessPercentage),
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${detailState.analysis!.totalTestsCompleted} Test',
-                                            style: AppTextStyles.caption.copyWith(
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                  width: 80,
+                                  height: 80,
+                                  child: CircularProgressIndicator(
+                                    value: detailState.analysis!
+                                            .overallSuccessPercentage /
+                                        100,
+                                    strokeWidth: 10,
+                                    backgroundColor: AppColors.border,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      _getSuccessColor(detailState
+                                          .analysis!.overallSuccessPercentage),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  '${detailState.analysis!.overallSuccessPercentage.toInt()}%',
+                                  style: AppTextStyles.h3.copyWith(
+                                    color: _getSuccessColor(detailState
+                                        .analysis!.overallSuccessPercentage),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${detailState.analysis!.totalTestsCompleted} Test Çözüldü',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
@@ -202,14 +193,14 @@ class StudentDetailPage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: AppConstants.paddingM),
-                          ...(detailState.analysis!.learningOutcomeProgress.values
-                              .toList()
-                            ..sort((a, b) =>
-                                b.completedQuestions
+                          ...(detailState
+                                  .analysis!.learningOutcomeProgress.values
+                                  .toList()
+                                ..sort((a, b) => b.completedQuestions
                                     .compareTo(a.completedQuestions)))
-                            .map((progress) => _LearningOutcomeCard(
-                                  progress: progress,
-                                )),
+                              .map((progress) => _LearningOutcomeCard(
+                                    progress: progress,
+                                  )),
                           const SizedBox(height: AppConstants.paddingL),
                         ],
                         // Test Geçmişi
@@ -260,7 +251,8 @@ class StudentDetailPage extends ConsumerWidget {
                                             children: [
                                               Text(
                                                 history.testTitle,
-                                                style: AppTextStyles.h6.copyWith(
+                                                style:
+                                                    AppTextStyles.h6.copyWith(
                                                   color: AppColors.textPrimary,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -269,8 +261,8 @@ class StudentDetailPage extends ConsumerWidget {
                                               Row(
                                                 children: [
                                                   Container(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
                                                       horizontal: 8,
                                                       vertical: 4,
                                                     ),
@@ -283,35 +275,43 @@ class StudentDetailPage extends ConsumerWidget {
                                                               12),
                                                     ),
                                                     child: Text(
-                                                      history.testTypeDisplayName,
-                                                      style: AppTextStyles.caption
+                                                      history
+                                                          .testTypeDisplayName,
+                                                      style: AppTextStyles
+                                                          .caption
                                                           .copyWith(
-                                                        color: _getTestTypeColor(
-                                                            history.testType),
+                                                        color:
+                                                            _getTestTypeColor(
+                                                                history
+                                                                    .testType),
                                                         fontWeight:
                                                             FontWeight.w600,
                                                       ),
                                                     ),
                                                   ),
-                                                  if (history.level != null) ...[
+                                                  if (history.level !=
+                                                      null) ...[
                                                     const SizedBox(width: 8),
                                                     Text(
                                                       'Seviye ${history.level}',
-                                                      style: AppTextStyles.caption
+                                                      style: AppTextStyles
+                                                          .caption
                                                           .copyWith(
-                                                        color:
-                                                            AppColors.textSecondary,
+                                                        color: AppColors
+                                                            .textSecondary,
                                                       ),
                                                     ),
                                                   ],
-                                                  if (history.topicTitle != null) ...[
+                                                  if (history.topicTitle !=
+                                                      null) ...[
                                                     const SizedBox(width: 8),
                                                     Text(
                                                       history.topicTitle!,
-                                                      style: AppTextStyles.caption
+                                                      style: AppTextStyles
+                                                          .caption
                                                           .copyWith(
-                                                        color:
-                                                            AppColors.textSecondary,
+                                                        color: AppColors
+                                                            .textSecondary,
                                                       ),
                                                     ),
                                                   ],
@@ -520,16 +520,16 @@ class _LearningOutcomeCard extends StatelessWidget {
                 icon: Icons.quiz_outlined,
               ),
               _DetailStatItem(
-                label: 'Çözülen',
-                value: '${progress.completedQuestions}',
-                icon: Icons.check_circle_outline,
-                color: AppColors.info,
-              ),
-              _DetailStatItem(
                 label: 'Doğru',
                 value: '${progress.correctAnswers}',
                 icon: Icons.check_circle,
                 color: AppColors.success,
+              ),
+              _DetailStatItem(
+                label: 'Yanlış',
+                value: '${progress.incorrectAnswers}',
+                icon: Icons.cancel,
+                color: AppColors.error,
               ),
             ],
           ),
@@ -621,5 +621,3 @@ class _HistoryStatItem extends StatelessWidget {
     );
   }
 }
-
-

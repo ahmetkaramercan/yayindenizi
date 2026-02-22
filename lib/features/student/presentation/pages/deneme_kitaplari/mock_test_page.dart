@@ -68,6 +68,33 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
       );
     }
 
+    if (testState.alreadySolved && testState.currentResult != null) {
+      final correctMap = <int, int>{};
+      final savedAnswers = <int, int?>{};
+      for (int i = 0; i < test.questions.length; i++) {
+        correctMap[i] = test.questions[i].correctAnswerIndex;
+        final answer = testState.currentResult!.answers.where(
+          (a) => a.questionId == test.questions[i].id,
+        );
+        if (answer.isNotEmpty) {
+          savedAnswers[i] = answer.first.selectedAnswerIndex;
+        }
+      }
+
+      return Scaffold(
+        appBar: AppBar(title: Text('${test.title} - Sonuç')),
+        body: OpticalFormResult(
+          questionCount: test.questions.length,
+          studentAnswers: savedAnswers,
+          correctAnswers: correctMap,
+          onClose: () {
+            ref.read(mockTestProvider.notifier).resetCurrentTest();
+            context.pop();
+          },
+        ),
+      );
+    }
+
     if (_showResult && testState.currentResult != null) {
       final correctMap = <int, int>{};
       for (int i = 0; i < test.questions.length; i++) {

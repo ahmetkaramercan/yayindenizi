@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/learning_outcome.dart';
 import '../../domain/entities/test.dart';
@@ -10,12 +11,14 @@ class TestState {
   final TestResult? testResult;
   final bool isLoading;
   final String? error;
+  final bool alreadySolved;
 
   TestState({
     this.test,
     this.testResult,
     this.isLoading = false,
     this.error,
+    this.alreadySolved = false,
   });
 
   TestState copyWith({
@@ -23,12 +26,14 @@ class TestState {
     TestResult? testResult,
     bool? isLoading,
     String? error,
+    bool? alreadySolved,
   }) {
     return TestState(
       test: test ?? this.test,
       testResult: testResult,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      alreadySolved: alreadySolved ?? this.alreadySolved,
     );
   }
 }
@@ -63,9 +68,92 @@ class TestNotifier extends StateNotifier<TestState> {
 
     try {
       final test = await _testRepo.getTest(testId);
+
+      final existingResult = await _checkExistingResult(testId, test);
+      if (existingResult != null) {
+        state = state.copyWith(
+          test: test,
+          testResult: existingResult,
+          isLoading: false,
+          alreadySolved: true,
+        );
+        return;
+      }
+
       state = state.copyWith(test: test, isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<TestResult?> _checkExistingResult(String testId, Test test) async {
+    try {
+      final data = await _testRepo.getResultForTest(testId);
+      if (data == null) return null;
+
+      final answersData = data['answers'] as List? ?? [];
+      final answerResults = <AnswerResult>[];
+
+      for (final a in answersData) {
+        final answer = a as Map<String, dynamic>;
+        final question = answer['question'] as Map<String, dynamic>?;
+        answerResults.add(AnswerResult(
+          questionId: answer['questionId'] ?? '',
+          selectedAnswerIndex: answer['selectedIndex'] as int?,
+          isCorrect: answer['isCorrect'] == true,
+          correctAnswerIndex: question?['correctAnswerIndex'] ?? 0,
+        ));
+      }
+
+      final totalQuestions = answerResults.length;
+      final correctAnswers = answerResults.where((a) => a.isCorrect).length;
+      final wrongAnswers = answerResults.where((a) => !a.isCorrect && a.selectedAnswerIndex != null).length;
+      final successPercentage = totalQuestions > 0
+          ? (correctAnswers / totalQuestions) * 100
+          : 0.0;
+
+      final learningOutcomeMap = <String, List<AnswerResult>>{};
+      for (final answer in answerResults) {
+        final q = test.questions.where((q) => q.id == answer.questionId);
+        final outcomeId = q.isNotEmpty ? (q.first.learningOutcome?.id ?? 'general') : 'general';
+        learningOutcomeMap.putIfAbsent(outcomeId, () => []).add(answer);
+      }
+
+      final learningOutcomeStats = learningOutcomeMap.entries.map((entry) {
+        final outcomeId = entry.key;
+        final answers = entry.value;
+        final total = answers.length;
+        final correct = answers.where((a) => a.isCorrect).length;
+        final wrong = total - correct;
+        final percentage = total > 0 ? (correct / total) * 100 : 0.0;
+
+        final matchingQ = test.questions.where(
+          (q) => (q.learningOutcome?.id ?? 'general') == outcomeId,
+        );
+        final outcome = matchingQ.isNotEmpty ? matchingQ.first.learningOutcome : null;
+
+        return LearningOutcomeStats(
+          learningOutcome: outcome ?? const LearningOutcome(id: 'general', name: 'Genel'),
+          totalQuestions: total,
+          correctAnswers: correct,
+          wrongAnswers: wrong,
+          successPercentage: percentage,
+        );
+      }).toList();
+
+      return TestResult(
+        testId: testId,
+        level: test.level,
+        answers: answerResults,
+        totalQuestions: totalQuestions,
+        correctAnswers: correctAnswers,
+        wrongAnswers: wrongAnswers,
+        successPercentage: successPercentage,
+        learningOutcomeStats: learningOutcomeStats,
+      );
+    } catch (e) {
+      dev.log('Failed to check existing result: $e', name: 'TestNotifier');
+      return null;
     }
   }
 
@@ -159,7 +247,10 @@ class TestNotifier extends StateNotifier<TestState> {
         answers: answerList,
         totalTime: 0,
       );
-    } catch (_) {}
+      dev.log('Test result submitted for test $testId', name: 'TestNotifier');
+    } catch (e) {
+      dev.log('Failed to submit test result: $e', name: 'TestNotifier');
+    }
   }
 
   void resetTest() {

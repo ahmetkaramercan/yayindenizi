@@ -337,16 +337,16 @@ class _LearningOutcomeCard extends StatelessWidget {
                 icon: Icons.quiz_outlined,
               ),
               _DetailStatItem(
-                label: 'Çözülen',
-                value: '${progress.completedQuestions}',
-                icon: Icons.check_circle_outline,
-                color: AppColors.info,
-              ),
-              _DetailStatItem(
                 label: 'Doğru',
                 value: '${progress.correctAnswers}',
                 icon: Icons.check_circle,
                 color: AppColors.success,
+              ),
+              _DetailStatItem(
+                label: 'Yanlış',
+                value: '${progress.incorrectAnswers}',
+                icon: Icons.cancel,
+                color: AppColors.error,
               ),
             ],
           ),

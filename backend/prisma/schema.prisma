@@ -34,11 +34,12 @@ model User {
   okul         String?
   ogretmenKodu String?  @unique @map("ogretmen_kodu")
 
-  teacherOf      TeacherStudent[] @relation("TeacherRelation")
-  studentOf      TeacherStudent[] @relation("StudentRelation")
-  results        Result[]
-  analytics      Analytics[]
-  studentAnswers StudentAnswer[]
+  teacherOf        TeacherStudent[]  @relation("TeacherRelation")
+  studentOf        TeacherStudent[]  @relation("StudentRelation")
+  results          Result[]
+  analytics        Analytics[]
+  outcomeAnalytics OutcomeAnalytics[]
+  studentAnswers   StudentAnswer[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -73,7 +74,8 @@ model Book {
   imageUrl    String?      @map("image_url")
   category    BookCategory
 
-  sections Section[]
+  sections         Section[]
+  learningOutcomes LearningOutcome[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -140,10 +142,11 @@ model Question {
   testId             String  @map("test_id")
   learningOutcomeId  String? @map("learning_outcome_id")
 
-  test            Test             @relation(fields: [testId], references: [id], onDelete: Cascade)
-  learningOutcome LearningOutcome? @relation(fields: [learningOutcomeId], references: [id], onDelete: SetNull)
-  answers         Answer[]
-  studentAnswers  StudentAnswer[]
+  test             Test              @relation(fields: [testId], references: [id], onDelete: Cascade)
+  learningOutcome  LearningOutcome?  @relation(fields: [learningOutcomeId], references: [id], onDelete: SetNull)
+  answers          Answer[]
+  studentAnswers   StudentAnswer[]
+  questionOutcomes QuestionOutcome[]
 
   @@index([testId])
   @@map("questions")
@@ -215,6 +218,30 @@ model Analytics {
   @@map("analytics")
 }
 
+// ─── OutcomeAnalytics (per user per learning outcome) ───────────────────────
+
+model OutcomeAnalytics {
+  id                String @id @default(uuid())
+  userId            String @map("user_id")
+  learningOutcomeId String @map("learning_outcome_id")
+
+  totalQuestions    Int   @default(0) @map("total_questions")
+  correctAnswers    Int   @default(0) @map("correct_answers")
+  incorrectAnswers  Int   @default(0) @map("incorrect_answers")
+  accuracy          Float @default(0)
+  lastAttemptAt     DateTime? @map("last_attempt_at")
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  learningOutcome LearningOutcome @relation(fields: [learningOutcomeId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, learningOutcomeId])
+  @@index([userId])
+  @@index([learningOutcomeId])
+  @@map("outcome_analytics")
+}
+
 // ─── StudentAnswer ──────────────────────────────────────────────────────────
 
 model StudentAnswer {
@@ -235,15 +262,36 @@ model StudentAnswer {
   @@map("student_answers")
 }
 
+// ─── QuestionOutcome (many-to-many bridge) ──────────────────────────────────
+
+model QuestionOutcome {
+  id                String @id @default(uuid())
+  questionId        String @map("question_id")
+  learningOutcomeId String @map("learning_outcome_id")
+
+  question        Question        @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  learningOutcome LearningOutcome @relation(fields: [learningOutcomeId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, learningOutcomeId])
+  @@index([learningOutcomeId])
+  @@map("question_outcomes")
+}
+
 // ─── Supporting ─────────────────────────────────────────────────────────────
 
 model LearningOutcome {
-  id          String @id @default(uuid())
+  id          String  @id @default(uuid())
+  code        String
   name        String
-  description String @default("")
+  description String  @default("")
   category    String
+  bookId      String? @map("book_id")
 
-  questions Question[]
+  book              Book?              @relation(fields: [bookId], references: [id], onDelete: SetNull)
+  questions         Question[]
+  questionOutcomes  QuestionOutcome[]
+  outcomeAnalytics  OutcomeAnalytics[]
 
+  @@unique([bookId, code])
   @@map("learning_outcomes")
 }

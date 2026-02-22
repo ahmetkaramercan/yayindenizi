@@ -55,19 +55,19 @@ async function main() {
     create: { teacherId: teacher.id, studentId: student.id },
   });
 
-  // Learning outcomes
+  // Learning outcomes (generic seed codes)
   const outcomes = await Promise.all([
-    prisma.learningOutcome.create({ data: { name: 'Paragrafta Anlam', category: 'Paragraf', description: 'Paragrafın ana fikrini, yardımcı fikirlerini ve konusunu belirleme' } }),
-    prisma.learningOutcome.create({ data: { name: 'Paragraf Yapısı', category: 'Paragraf', description: 'Paragrafın giriş, gelişme, sonuç bölümlerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { name: 'Paragraf Tamamlama', category: 'Paragraf', description: 'Paragrafı uygun cümlelerle tamamlama' } }),
-    prisma.learningOutcome.create({ data: { name: 'Cümlede Anlam', category: 'Cümle', description: 'Cümlenin anlamını kavrama ve yorumlama' } }),
-    prisma.learningOutcome.create({ data: { name: 'Cümle Yapısı', category: 'Cümle', description: 'Cümlenin yapısal özelliklerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { name: 'Cümle Tamamlama', category: 'Cümle', description: 'Cümleyi uygun sözcük veya ifadelerle tamamlama' } }),
-    prisma.learningOutcome.create({ data: { name: 'Kelime Anlamı', category: 'Kelime', description: 'Sözcüklerin anlamlarını kavrama' } }),
-    prisma.learningOutcome.create({ data: { name: 'Deyim ve Atasözü', category: 'Kelime', description: 'Deyim ve atasözlerini tanıma ve yorumlama' } }),
-    prisma.learningOutcome.create({ data: { name: 'Ses Bilgisi', category: 'Dil Bilgisi', description: 'Ses olaylarını ve kurallarını bilme' } }),
-    prisma.learningOutcome.create({ data: { name: 'Ekler', category: 'Dil Bilgisi', description: 'Yapım ve çekim eklerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { name: 'Sözcük Türleri', category: 'Dil Bilgisi', description: 'Sözcük türlerini ayırt etme' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.1', name: 'Paragrafta Anlam', category: 'Paragraf', description: 'Paragrafın ana fikrini, yardımcı fikirlerini ve konusunu belirleme' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.2', name: 'Paragraf Yapısı', category: 'Paragraf', description: 'Paragrafın giriş, gelişme, sonuç bölümlerini tanıma' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.3', name: 'Paragraf Tamamlama', category: 'Paragraf', description: 'Paragrafı uygun cümlelerle tamamlama' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.4', name: 'Cümlede Anlam', category: 'Cümle', description: 'Cümlenin anlamını kavrama ve yorumlama' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.5', name: 'Cümle Yapısı', category: 'Cümle', description: 'Cümlenin yapısal özelliklerini tanıma' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.6', name: 'Cümle Tamamlama', category: 'Cümle', description: 'Cümleyi uygun sözcük veya ifadelerle tamamlama' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.7', name: 'Kelime Anlamı', category: 'Kelime', description: 'Sözcüklerin anlamlarını kavrama' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.8', name: 'Deyim ve Atasözü', category: 'Kelime', description: 'Deyim ve atasözlerini tanıma ve yorumlama' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.9', name: 'Ses Bilgisi', category: 'Dil Bilgisi', description: 'Ses olaylarını ve kurallarını bilme' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.10', name: 'Ekler', category: 'Dil Bilgisi', description: 'Yapım ve çekim eklerini tanıma' } }),
+    prisma.learningOutcome.create({ data: { code: 'SEED.11', name: 'Sözcük Türleri', category: 'Dil Bilgisi', description: 'Sözcük türlerini ayırt etme' } }),
   ]);
 
   // Book → Section → Test → Question

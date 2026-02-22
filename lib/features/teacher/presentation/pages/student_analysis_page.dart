@@ -271,6 +271,28 @@ class _TeacherStudentAnalysisPageState
                                                     ),
                                                   ],
                                                 ),
+                                                const SizedBox(height: 16),
+                                                Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceAround,
+                                                  children: [
+                                                    _GeneralStatItem(
+                                                      label: 'Doğru',
+                                                      value:
+                                                          '${analysis.totalCorrect}',
+                                                      icon: Icons.check_circle,
+                                                      color: AppColors.success,
+                                                    ),
+                                                    _GeneralStatItem(
+                                                      label: 'Yanlış',
+                                                      value:
+                                                          '${analysis.totalIncorrect}',
+                                                      icon: Icons.cancel,
+                                                      color: AppColors.error,
+                                                    ),
+                                                  ],
+                                                ),
                                               ],
                                             ),
                                           ),
@@ -489,7 +511,7 @@ class _LearningOutcomeCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Detaylı İstatistikler
+          // Detaylı İstatistikler (öğretmen: doğru/yanlış görünür)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -499,16 +521,16 @@ class _LearningOutcomeCard extends StatelessWidget {
                 icon: Icons.quiz_outlined,
               ),
               _DetailStatItem(
-                label: 'Çözülen',
-                value: '${progress.completedQuestions}',
-                icon: Icons.check_circle_outline,
-                color: AppColors.info,
-              ),
-              _DetailStatItem(
                 label: 'Doğru',
                 value: '${progress.correctAnswers}',
                 icon: Icons.check_circle,
                 color: AppColors.success,
+              ),
+              _DetailStatItem(
+                label: 'Yanlış',
+                value: '${progress.incorrectAnswers}',
+                icon: Icons.cancel,
+                color: AppColors.error,
               ),
             ],
           ),
