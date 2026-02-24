@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/providers/invalidate_user_providers.dart';
 import '../../data/repositories/auth_repository.dart';
 
 class LoginState {
@@ -31,8 +32,9 @@ class LoginState {
 }
 
 class LoginNotifier extends StateNotifier<LoginState> {
-  LoginNotifier() : super(LoginState());
+  LoginNotifier(this._ref) : super(LoginState());
 
+  final Ref _ref;
   final _authRepo = sl<AuthRepository>();
 
   Future<void> login({
@@ -46,6 +48,9 @@ class LoginNotifier extends StateNotifier<LoginState> {
         email: email,
         password: password,
       );
+
+      // Önceki kullanıcının cache'lenmiş verilerini temizle
+      _ref.read(invalidateUserProvidersProvider)();
 
       state = state.copyWith(
         isLoading: false,
@@ -67,5 +72,5 @@ class LoginNotifier extends StateNotifier<LoginState> {
 }
 
 final loginProvider = StateNotifierProvider<LoginNotifier, LoginState>((ref) {
-  return LoginNotifier();
+  return LoginNotifier(ref);
 });

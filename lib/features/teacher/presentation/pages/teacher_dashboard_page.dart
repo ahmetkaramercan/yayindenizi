@@ -8,6 +8,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../providers/teacher_dashboard_provider.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/providers/invalidate_user_providers.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 
 class TeacherDashboardPage extends ConsumerWidget {
@@ -31,6 +32,7 @@ class TeacherDashboardPage extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              ref.read(invalidateUserProvidersProvider)();
               await sl<AuthRepository>().logout();
               if (context.mounted) {
                 context.pushReplacement('/login');

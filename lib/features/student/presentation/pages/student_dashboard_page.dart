@@ -11,6 +11,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../teacher/domain/entities/teacher.dart';
 import '../providers/student_dashboard_provider.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/providers/invalidate_user_providers.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 import '../providers/add_teacher_provider.dart';
 
@@ -150,6 +151,7 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
+              ref.read(invalidateUserProvidersProvider)();
               await sl<AuthRepository>().logout();
               if (context.mounted) {
                 context.pushReplacement('/login');

@@ -10,6 +10,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../widgets/book_card.dart';
 import '../providers/student_home_provider.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../../core/providers/invalidate_user_providers.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 
 class StudentHomePage extends ConsumerWidget {
@@ -140,6 +141,7 @@ class StudentHomePage extends ConsumerWidget {
                                 icon: const Icon(Icons.logout),
                                 color: AppColors.textOnPrimary,
                                 onPressed: () async {
+                                  ref.read(invalidateUserProvidersProvider)();
                                   await sl<AuthRepository>().logout();
                                   if (context.mounted) {
                                     context.pushReplacement('/login');
