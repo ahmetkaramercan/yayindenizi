@@ -165,29 +165,13 @@ class StudentHomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Hızlı Erişim Butonları
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppButton(
-                            text: 'Öğretmen Ekle',
-                            onPressed: () {
-                              context.push('/student/dashboard');
-                            },
-                            type: AppButtonType.primary,
-                          ),
-                        ),
-                        const SizedBox(width: AppConstants.paddingM),
-                        Expanded(
-                          child: AppButton(
-                            text: 'Analizim',
-                            icon: Icons.analytics_outlined,
-                            onPressed: () {
-                              context.push('/student/analysis');
-                            },
-                            type: AppButtonType.secondary,
-                          ),
-                        ),
-                      ],
+                    AppButton(
+                      text: 'Öğretmen Ekle',
+                      onPressed: () {
+                        context.push('/student/dashboard');
+                      },
+                      type: AppButtonType.primary,
+                      isFullWidth: true,
                     ),
                     const SizedBox(height: AppConstants.paddingM),
                     AppButton(

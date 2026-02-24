@@ -1,5 +1,6 @@
 import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/entities/learning_outcome.dart';
 import '../../domain/entities/mock_test.dart';
 import '../../domain/entities/mock_test_result.dart';
 import '../../domain/utils/test_result_calculator.dart';
@@ -160,6 +161,22 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
         (k, v) => MapEntry(k, v.correct),
       );
 
+      final learningOutcomeStatsList = calc.outcomeStats.entries.map((e) {
+        final matchingQ = test.questions.where(
+          (q) => (q.learningOutcome?.id ?? 'general') == e.key,
+        );
+        final outcome = matchingQ.isNotEmpty
+            ? matchingQ.first.learningOutcome
+            : null;
+        return MockLearningOutcomeStats(
+          learningOutcome: outcome ?? const LearningOutcome(id: 'general', name: 'Genel'),
+          totalQuestions: e.value.total,
+          correctAnswers: e.value.correct,
+          wrongAnswers: e.value.wrong,
+          successPercentage: e.value.percentage,
+        );
+      }).toList();
+
       return MockTestResult(
         testId: testId,
         testTitle: test.title,
@@ -171,6 +188,7 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
         successPercentage: calc.successPercentage,
         completedAt: DateTime.tryParse(data['finishedAt']?.toString() ?? '') ?? DateTime.now(),
         learningOutcomeStats: learningOutcomeStats,
+        learningOutcomeStatsList: learningOutcomeStatsList,
       );
     } catch (e) {
       dev.log('Failed to check existing result: $e', name: 'MockTestNotifier');

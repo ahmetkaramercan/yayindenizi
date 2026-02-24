@@ -55,7 +55,12 @@ export class TestsService {
       include: {
         section: { include: { book: true } },
         questions: {
-          include: { learningOutcome: true },
+          include: {
+            learningOutcome: true,
+            questionOutcomes: {
+              include: { learningOutcome: true },
+            },
+          },
           orderBy: { orderIndex: 'asc' },
         },
       },

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../domain/entities/mock_test_result.dart';
 import '../../providers/mock_test_provider.dart';
-import '../../widgets/optical_form.dart';
+import '../../widgets/optical_form.dart' show OpticalForm, OpticalFormResult, QuestionAnalysisItem;
 
 class MockTestPage extends ConsumerStatefulWidget {
   final String testId;
@@ -81,6 +82,9 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
         }
       }
 
+      final result = testState.currentResult!;
+      final questionDetails = _buildQuestionAnalysisDetails(test, result, savedAnswers, correctMap);
+
       return Scaffold(
         appBar: AppBar(title: Text('${test.title} - Sonuç')),
         body: OpticalFormResult(
@@ -91,6 +95,7 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
             ref.read(mockTestProvider.notifier).resetCurrentTest();
             context.pop();
           },
+          questionAnalysisDetails: questionDetails,
         ),
       );
     }
@@ -100,6 +105,9 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
       for (int i = 0; i < test.questions.length; i++) {
         correctMap[i] = test.questions[i].correctAnswerIndex;
       }
+
+      final result = testState.currentResult!;
+      final questionDetails = _buildQuestionAnalysisDetails(test, result, _answers, correctMap);
 
       return Scaffold(
         appBar: AppBar(title: Text('${test.title} - Sonuç')),
@@ -111,6 +119,7 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
             ref.read(mockTestProvider.notifier).resetCurrentTest();
             context.pop();
           },
+          questionAnalysisDetails: questionDetails,
         ),
       );
     }
@@ -158,6 +167,30 @@ class _MockTestPageState extends ConsumerState<MockTestPage> {
       _isSubmitting = false;
       _showResult = true;
     });
+  }
+
+  List<QuestionAnalysisItem> _buildQuestionAnalysisDetails(
+    dynamic test,
+    dynamic result,
+    Map<int, int?> studentAnswers,
+    Map<int, int> correctAnswers,
+  ) {
+    final answerByQuestionId = <String, bool>{};
+    for (final a in result.answers) {
+      answerByQuestionId[a.questionId as String] = a.status == AnswerStatus.correct;
+    }
+    final items = <QuestionAnalysisItem>[];
+    for (var i = 0; i < test.questions.length; i++) {
+      final q = test.questions[i];
+      final outcomeName = q.learningOutcome?.name ?? 'Genel';
+      final isCorrect = answerByQuestionId[q.id] ?? false;
+      items.add(QuestionAnalysisItem(
+        questionNumber: i + 1,
+        outcomeName: outcomeName,
+        isCorrect: isCorrect,
+      ));
+    }
+    return items;
   }
 
   void _showExitDialog(BuildContext context) {

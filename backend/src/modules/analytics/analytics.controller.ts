@@ -67,10 +67,23 @@ export class AnalyticsController {
     return this.analyticsService.getStudentWeakSections(userId);
   }
 
+  @Get('my/section/:sectionId')
+  @Roles(Role.STUDENT)
+  getMySectionAnalysis(
+    @CurrentUser('id') userId: string,
+    @Param('sectionId', ParseUUIDPipe) sectionId: string,
+  ) {
+    return this.analyticsService.getSectionAnalysis(userId, sectionId);
+  }
+
   @Get('my/full')
   @Roles(Role.STUDENT)
-  getMyFullAnalysis(@CurrentUser('id') userId: string) {
-    return this.analyticsService.getStudentFullAnalysis(userId);
+  @ApiQuery({ name: 'bookId', required: false })
+  getMyFullAnalysis(
+    @CurrentUser('id') userId: string,
+    @Query('bookId') bookId?: string,
+  ) {
+    return this.analyticsService.getStudentFullAnalysis(userId, bookId);
   }
 
   // ─── Teacher views of student analytics ─────────────────────────────
@@ -147,15 +160,17 @@ export class AnalyticsController {
 
   @Get('student/:studentId/full')
   @Roles(Role.TEACHER, Role.ADMIN)
+  @ApiQuery({ name: 'bookId', required: false })
   async getStudentFullAnalysis(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
     @Param('studentId', ParseUUIDPipe) studentId: string,
+    @Query('bookId') bookId?: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
     }
-    return this.analyticsService.getStudentFullAnalysis(studentId);
+    return this.analyticsService.getStudentFullAnalysis(studentId, bookId);
   }
 
   // ─── Test result analytics ──────────────────────────────────────────

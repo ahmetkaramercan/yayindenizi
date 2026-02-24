@@ -5,6 +5,102 @@ import '../../../../core/constants/app_constants.dart';
 
 const _optionLabels = ['A', 'B', 'C', 'D', 'E'];
 
+/// Soru bazlı analiz öğesi: Soru N: Kazanım Adı (✓/✗)
+class QuestionAnalysisItem {
+  final int questionNumber;
+  final String outcomeName;
+  final bool isCorrect;
+
+  const QuestionAnalysisItem({
+    required this.questionNumber,
+    required this.outcomeName,
+    required this.isCorrect,
+  });
+}
+
+void _showTestAnalysisDialog(
+  BuildContext context,
+  List<QuestionAnalysisItem> items,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (ctx) => DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (_, controller) => Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'Test Kazanım Analizi',
+              style: AppTextStyles.h5.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: ListView.builder(
+              controller: controller,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: items.length,
+              itemBuilder: (ctx, i) {
+                final item = items[i];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 80,
+                        child: Text(
+                          'Soru ${item.questionNumber}:',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.outcomeName,
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                      Icon(
+                        item.isCorrect ? Icons.check_circle : Icons.cancel,
+                        size: 24,
+                        color: item.isCorrect ? AppColors.success : AppColors.error,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class OpticalForm extends StatelessWidget {
   final int questionCount;
   final Map<int, int?> answers;
@@ -207,6 +303,8 @@ class OpticalFormResult extends StatelessWidget {
   final Map<int, int?> studentAnswers;
   final Map<int, int> correctAnswers;
   final VoidCallback onClose;
+  /// Soru bazlı analiz: Soru N: Kazanım (✓/✗) formatında gösterilir
+  final List<QuestionAnalysisItem>? questionAnalysisDetails;
 
   const OpticalFormResult({
     super.key,
@@ -214,6 +312,7 @@ class OpticalFormResult extends StatelessWidget {
     required this.studentAnswers,
     required this.correctAnswers,
     required this.onClose,
+    this.questionAnalysisDetails,
   });
 
   @override
@@ -278,25 +377,56 @@ class OpticalFormResult extends StatelessWidget {
             },
           ),
         ),
-        // Close button
+        // Test Analizi & Close buttons
         Container(
           padding: const EdgeInsets.all(AppConstants.paddingM),
           child: SafeArea(
             top: false,
-            child: SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: onClose,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.textOnPrimary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppConstants.radiusM),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (questionAnalysisDetails != null &&
+                    questionAnalysisDetails!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppConstants.paddingS),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _showTestAnalysisDialog(
+                          context,
+                          questionAnalysisDetails!,
+                        ),
+                        icon: const Icon(Icons.analytics_outlined, size: 20),
+                        label: const Text('Test Analizi'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppConstants.radiusM),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: onClose,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.textOnPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.radiusM),
+                      ),
+                    ),
+                    child: Text('Kapat', style: AppTextStyles.button),
                   ),
                 ),
-                child: Text('Kapat', style: AppTextStyles.button),
-              ),
+              ],
             ),
           ),
         ),

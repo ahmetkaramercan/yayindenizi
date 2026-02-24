@@ -10,8 +10,15 @@ class AnalyticsRepository {
     return data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> getMyFull() async {
-    final data = await _api.get('/analytics/my/full');
+  Future<Map<String, dynamic>> getMyFull({String? bookId}) async {
+    final params = <String, dynamic>{};
+    if (bookId != null) params['bookId'] = bookId;
+    final data = await _api.get('/analytics/my/full', queryParameters: params);
+    return data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getMySectionAnalysis(String sectionId) async {
+    final data = await _api.get('/analytics/my/section/$sectionId');
     return data as Map<String, dynamic>;
   }
 
@@ -20,8 +27,13 @@ class AnalyticsRepository {
     return data as Map<String, dynamic>;
   }
 
-  Future<Map<String, dynamic>> getStudentFull(String studentId) async {
-    final data = await _api.get('/analytics/student/$studentId/full');
+  Future<Map<String, dynamic>> getStudentFull(String studentId, {String? bookId}) async {
+    final params = <String, dynamic>{};
+    if (bookId != null) params['bookId'] = bookId;
+    final data = await _api.get(
+      '/analytics/student/$studentId/full',
+      queryParameters: params,
+    );
     return data as Map<String, dynamic>;
   }
 }

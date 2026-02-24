@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
+import '../../../domain/entities/test_result.dart';
 import '../../providers/test_provider.dart';
-import '../../widgets/optical_form.dart';
+import '../../widgets/optical_form.dart' show OpticalForm, OpticalFormResult, QuestionAnalysisItem;
 
 class TestPage extends ConsumerStatefulWidget {
   final String testId;
@@ -81,6 +82,12 @@ class _TestPageState extends ConsumerState<TestPage> {
         }
       }
 
+      final questionDetails = _buildQuestionAnalysisDetails(
+        test,
+        testState.testResult!.answers,
+        savedAnswers,
+        correctMap,
+      );
       return Scaffold(
         appBar: AppBar(title: Text('${test.title} - Sonuç')),
         body: OpticalFormResult(
@@ -91,6 +98,7 @@ class _TestPageState extends ConsumerState<TestPage> {
             ref.read(testProvider.notifier).resetTest();
             context.pop();
           },
+          questionAnalysisDetails: questionDetails,
         ),
       );
     }
@@ -101,6 +109,12 @@ class _TestPageState extends ConsumerState<TestPage> {
         correctMap[i] = test.questions[i].correctAnswerIndex;
       }
 
+      final questionDetails = _buildQuestionAnalysisDetails(
+        test,
+        testState.testResult!.answers,
+        _answers,
+        correctMap,
+      );
       return Scaffold(
         appBar: AppBar(title: Text('${test.title} - Sonuç')),
         body: OpticalFormResult(
@@ -111,6 +125,7 @@ class _TestPageState extends ConsumerState<TestPage> {
             ref.read(testProvider.notifier).resetTest();
             context.pop();
           },
+          questionAnalysisDetails: questionDetails,
         ),
       );
     }
@@ -158,6 +173,30 @@ class _TestPageState extends ConsumerState<TestPage> {
       _isSubmitting = false;
       _showResult = true;
     });
+  }
+
+  List<QuestionAnalysisItem> _buildQuestionAnalysisDetails(
+    dynamic test,
+    List<AnswerResult> answers,
+    Map<int, int?> studentAnswers,
+    Map<int, int> correctAnswers,
+  ) {
+    final answerByQuestionId = <String, bool>{};
+    for (final a in answers) {
+      answerByQuestionId[a.questionId] = a.isCorrect;
+    }
+    final result = <QuestionAnalysisItem>[];
+    for (var i = 0; i < test.questions.length; i++) {
+      final q = test.questions[i];
+      final outcomeName = q.learningOutcome?.name ?? 'Genel';
+      final isCorrect = answerByQuestionId[q.id] ?? false;
+      result.add(QuestionAnalysisItem(
+        questionNumber: i + 1,
+        outcomeName: outcomeName,
+        isCorrect: isCorrect,
+      ));
+    }
+    return result;
   }
 
   void _showExitDialog(BuildContext context) {

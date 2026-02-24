@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../../../core/widgets/buttons/app_button.dart';
+import '../../../../../../core/widgets/cards/app_card.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
 import '../../../../../../core/constants/app_constants.dart';
@@ -21,12 +23,16 @@ class SectionTestListPage extends ConsumerWidget {
   final String sectionId;
   final String sectionTitle;
   final String bookTitle;
+  final String? bookId;
+  final bool isParagrafBook;
 
   const SectionTestListPage({
     super.key,
     required this.sectionId,
     required this.sectionTitle,
     required this.bookTitle,
+    this.bookId,
+    this.isParagrafBook = false,
   });
 
   @override
@@ -71,8 +77,60 @@ class SectionTestListPage extends ConsumerWidget {
 
           return ListView.builder(
             padding: const EdgeInsets.all(AppConstants.paddingM),
-            itemCount: tests.length + 1,
+            itemCount: tests.length + 1 + (isParagrafBook ? 1 : 0),
             itemBuilder: (context, index) {
+              // Seviye Analizim butonu (sadece Paragraf Koçu, test listesinin sonunda)
+              if (isParagrafBook && index == tests.length + 1) {
+                return Padding(
+                  padding: const EdgeInsets.only(top: AppConstants.paddingM),
+                  child: AppCard(
+                    onTap: () {
+                      context.push(
+                        '/student/section-analysis',
+                        extra: {
+                          'sectionId': sectionId,
+                          'sectionTitle': sectionTitle,
+                          'bookTitle': bookTitle,
+                        },
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.analytics_outlined,
+                          size: 32,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: AppConstants.paddingM),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Seviye Analizim',
+                                style: AppTextStyles.h6.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '$sectionTitle kazanım analizi',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
               if (index == 0) {
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppConstants.paddingM),

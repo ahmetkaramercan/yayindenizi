@@ -52,11 +52,15 @@ export class AnalyticsService {
 
   // ─── Overview ───────────────────────────────────────────────────────────
 
-  async getStudentOverview(userId: string) {
+  async getStudentOverview(userId: string, bookId?: string) {
     await this.ensureUserExists(userId);
 
+    const where: { userId: string; section?: { bookId: string } } = { userId };
+    if (bookId) {
+      where.section = { bookId };
+    }
     const analytics = await this.prisma.analytics.findMany({
-      where: { userId },
+      where,
     });
 
     if (analytics.length === 0) {
@@ -98,9 +102,11 @@ export class AnalyticsService {
 
   // ─── Section stats ──────────────────────────────────────────────────────
 
-  async getStudentSectionStats(userId: string): Promise<SectionStat[]> {
+  async getStudentSectionStats(userId: string, bookId?: string): Promise<SectionStat[]> {
+    const where: { userId: string; section?: { bookId: string } } = { userId };
+    if (bookId) where.section = { bookId };
     const analytics = await this.prisma.analytics.findMany({
-      where: { userId },
+      where,
       include: { section: { include: { book: true } } },
       orderBy: { accuracy: 'asc' },
     });
@@ -121,9 +127,14 @@ export class AnalyticsService {
 
   async getStudentLearningOutcomeStats(
     userId: string,
+    bookId?: string,
   ): Promise<OutcomeStat[]> {
+    const where: { userId: string; learningOutcome?: { bookId: string | null } } = { userId };
+    if (bookId) {
+      where.learningOutcome = { bookId };
+    }
     const rows = await this.prisma.outcomeAnalytics.findMany({
-      where: { userId },
+      where,
       include: {
         learningOutcome: { select: { id: true, code: true, name: true, category: true } },
       },
@@ -144,8 +155,8 @@ export class AnalyticsService {
 
   // ─── Outcome stats grouped by category ──────────────────────────────
 
-  async getStudentOutcomesByCategory(userId: string) {
-    const stats = await this.getStudentLearningOutcomeStats(userId);
+  async getStudentOutcomesByCategory(userId: string, bookId?: string) {
+    const stats = await this.getStudentLearningOutcomeStats(userId, bookId);
 
     const categoryMap = new Map<
       string,
@@ -186,9 +197,15 @@ export class AnalyticsService {
   async getStudentWeakOutcomes(
     userId: string,
     threshold = 50,
+    bookId?: string,
   ): Promise<OutcomeStat[]> {
+    const where: { userId: string; accuracy: { lt: number }; learningOutcome?: { bookId: string | null } } = {
+      userId,
+      accuracy: { lt: threshold },
+    };
+    if (bookId) where.learningOutcome = { bookId };
     const rows = await this.prisma.outcomeAnalytics.findMany({
-      where: { userId, accuracy: { lt: threshold } },
+      where,
       include: {
         learningOutcome: { select: { id: true, code: true, name: true, category: true } },
       },
@@ -209,9 +226,11 @@ export class AnalyticsService {
 
   // ─── Progress over time ─────────────────────────────────────────────────
 
-  async getStudentProgressOverTime(userId: string) {
+  async getStudentProgressOverTime(userId: string, bookId?: string) {
+    const where: { userId: string; test?: { section: { bookId: string } } } = { userId };
+    if (bookId) where.test = { section: { bookId } };
     const results = await this.prisma.result.findMany({
-      where: { userId },
+      where,
       select: {
         id: true,
         score: true,
@@ -235,14 +254,16 @@ export class AnalyticsService {
   async getStudentWeakSections(
     userId: string,
     threshold = 50,
+    bookId?: string,
   ): Promise<SectionStat[]> {
-    const stats = await this.getStudentSectionStats(userId);
+    const stats = await this.getStudentSectionStats(userId, bookId);
+    return stats.filter((s) => s.accuracy < threshold);
     return stats.filter((s) => s.accuracy < threshold);
   }
 
   // ─── Full analysis ──────────────────────────────────────────────────────
 
-  async getStudentFullAnalysis(userId: string) {
+  async getStudentFullAnalysis(userId: string, bookId?: string) {
     const [
       overview,
       sectionStats,
@@ -252,13 +273,13 @@ export class AnalyticsService {
       weakSections,
       weakOutcomes,
     ] = await Promise.all([
-      this.getStudentOverview(userId),
-      this.getStudentSectionStats(userId),
-      this.getStudentLearningOutcomeStats(userId),
-      this.getStudentOutcomesByCategory(userId),
-      this.getStudentProgressOverTime(userId),
-      this.getStudentWeakSections(userId),
-      this.getStudentWeakOutcomes(userId),
+      this.getStudentOverview(userId, bookId),
+      this.getStudentSectionStats(userId, bookId),
+      this.getStudentLearningOutcomeStats(userId, bookId),
+      this.getStudentOutcomesByCategory(userId, bookId),
+      this.getStudentProgressOverTime(userId, bookId),
+      this.getStudentWeakSections(userId, 50, bookId),
+      this.getStudentWeakOutcomes(userId, 50, bookId),
     ]);
 
     // Flutter uyumluluğu: root seviyede totalTests, overallSuccess, learningOutcomes
@@ -288,6 +309,105 @@ export class AnalyticsService {
       overallSuccess: overview.overallAccuracy,
       totalCorrect: overview.totalCorrect,
       totalIncorrect: overview.totalIncorrect,
+      learningOutcomes,
+    };
+  }
+
+  // ─── Section (seviye) analysis ───────────────────────────────────────────
+
+  async getSectionAnalysis(userId: string, sectionId: string) {
+    const section = await this.prisma.section.findUnique({
+      where: { id: sectionId },
+      include: { book: true },
+    });
+    if (!section) throw new NotFoundException('Section not found');
+
+    const results = await this.prisma.result.findMany({
+      where: { userId, test: { sectionId } },
+      include: {
+        answers: {
+          include: {
+            question: {
+              include: {
+                learningOutcome: { select: { id: true, code: true, name: true, category: true } },
+                questionOutcomes: {
+                  include: { learningOutcome: { select: { id: true, code: true, name: true, category: true } } },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const outcomeBreakdown = new Map<
+      string,
+      { code: string; name: string; category: string; total: number; correct: number }
+    >();
+
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+    let totalIncorrect = 0;
+
+    for (const result of results) {
+      for (const answer of result.answers) {
+        totalQuestions++;
+        if (answer.isCorrect) totalCorrect++;
+        else if (answer.selectedIndex != null) totalIncorrect++;
+
+        // learningOutcomeId veya questionOutcomes (many-to-many) üzerinden kazanım
+        let lo = answer.question.learningOutcome;
+        if (!lo && answer.question.questionOutcomes?.length) {
+          lo = answer.question.questionOutcomes[0].learningOutcome;
+        }
+        if (!lo) continue;
+
+        const existing = outcomeBreakdown.get(lo.id);
+        if (existing) {
+          existing.total++;
+          if (answer.isCorrect) existing.correct++;
+        } else {
+          outcomeBreakdown.set(lo.id, {
+            code: lo.code,
+            name: lo.name,
+            category: lo.category,
+            total: 1,
+            correct: answer.isCorrect ? 1 : 0,
+          });
+        }
+      }
+    }
+
+    const learningOutcomes = Array.from(outcomeBreakdown.entries()).map(
+      ([id, data]) => ({
+        id,
+        learningOutcomeId: id,
+        name: data.name,
+        description: data.category,
+        totalQuestions: data.total,
+        completedQuestions: data.total,
+        correctAnswers: data.correct,
+        incorrectAnswers: data.total - data.correct,
+        completionPercentage: 100,
+        successPercentage:
+          data.total > 0
+            ? Math.round((data.correct / data.total) * 10000) / 100
+            : 0,
+      }),
+    );
+
+    return {
+      sectionId,
+      sectionTitle: section.title,
+      bookTitle: section.book.title,
+      totalTests: results.length,
+      totalQuestions,
+      totalCorrect,
+      totalIncorrect,
+      overallSuccess:
+        totalQuestions > 0
+          ? Math.round((totalCorrect / totalQuestions) * 10000) / 100
+          : 0,
       learningOutcomes,
     };
   }

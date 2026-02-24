@@ -1,5 +1,4 @@
 import 'package:equatable/equatable.dart';
-import 'question.dart';
 import 'learning_outcome.dart';
 
 enum AnswerStatus {
@@ -41,7 +40,8 @@ class MockTestResult extends Equatable {
   final double successPercentage;
   final Duration? duration; // İleride kullanılacak
   final DateTime completedAt;
-  final Map<String, int> learningOutcomeStats; // Kazanım ID -> Doğru sayısı
+  final Map<String, int> learningOutcomeStats; // Kazanım ID -> Doğru sayısı (deprecated, use learningOutcomeStatsList)
+  final List<MockLearningOutcomeStats> learningOutcomeStatsList; // Test analizi için
 
   const MockTestResult({
     required this.testId,
@@ -55,6 +55,7 @@ class MockTestResult extends Equatable {
     this.duration,
     required this.completedAt,
     required this.learningOutcomeStats,
+    this.learningOutcomeStatsList = const [],
   });
 
   @override
@@ -70,6 +71,32 @@ class MockTestResult extends Equatable {
         duration,
         completedAt,
         learningOutcomeStats,
+        learningOutcomeStatsList,
+      ];
+}
+
+class MockLearningOutcomeStats extends Equatable {
+  final LearningOutcome learningOutcome;
+  final int totalQuestions;
+  final int correctAnswers;
+  final int wrongAnswers;
+  final double successPercentage;
+
+  const MockLearningOutcomeStats({
+    required this.learningOutcome,
+    required this.totalQuestions,
+    required this.correctAnswers,
+    required this.wrongAnswers,
+    required this.successPercentage,
+  });
+
+  @override
+  List<Object?> get props => [
+        learningOutcome,
+        totalQuestions,
+        correctAnswers,
+        wrongAnswers,
+        successPercentage,
       ];
 }
 

@@ -9,8 +9,11 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../student/domain/entities/student.dart';
 import '../../../student/domain/entities/student_analysis.dart';
+import '../../../student/domain/entities/book.dart';
 import '../providers/teacher_student_analysis_provider.dart';
 import '../providers/teacher_dashboard_provider.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../student/data/repositories/book_repository.dart';
 
 class TeacherStudentAnalysisPage extends ConsumerStatefulWidget {
   const TeacherStudentAnalysisPage({super.key});
@@ -24,11 +27,17 @@ class _TeacherStudentAnalysisPageState
     extends ConsumerState<TeacherStudentAnalysisPage> {
   final _searchController = TextEditingController();
   String? _selectedStudentId;
+  String? _selectedBookId;
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<List<Book>> _loadBooks() async {
+    final repo = sl<BookRepository>();
+    return repo.getBooks();
   }
 
   @override
@@ -78,10 +87,8 @@ class _TeacherStudentAnalysisPageState
                             onTap: () {
                               setState(() {
                                 _selectedStudentId = student.id;
+                                _selectedBookId = null;
                               });
-                              ref
-                                  .read(teacherStudentAnalysisProvider.notifier)
-                                  .loadStudentAnalysis(student.id ?? '');
                             },
                             borderRadius:
                                 BorderRadius.circular(AppConstants.radiusM),
@@ -142,6 +149,92 @@ class _TeacherStudentAnalysisPageState
                       child: Text('Henüz bağlı öğrenci yok'),
                     ),
                   ),
+                if (_selectedStudentId != null) ...[
+                  const SizedBox(height: AppConstants.paddingM),
+                  Text(
+                    'Kitap Seçin',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.paddingS),
+                  FutureBuilder<List<Book>>(
+                    future: _loadBooks(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      final books = snapshot.data!;
+                      return SizedBox(
+                        height: 56,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: books.length,
+                          itemBuilder: (context, index) {
+                            final book = books[index];
+                            final isSelected = _selectedBookId == book.id;
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                right: AppConstants.paddingS,
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    _selectedBookId = book.id;
+                                  });
+                                  ref
+                                      .read(teacherStudentAnalysisProvider
+                                          .notifier)
+                                      .loadStudentAnalysis(
+                                        _selectedStudentId!,
+                                        bookId: book.id,
+                                      );
+                                },
+                                borderRadius: BorderRadius.circular(
+                                    AppConstants.radiusM),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppConstants.paddingM,
+                                    vertical: AppConstants.paddingS,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? AppColors.primaryLight
+                                            .withOpacity(0.2)
+                                        : AppColors.surface,
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.border,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                        AppConstants.radiusM),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      book.title,
+                                      style: AppTextStyles.body2.copyWith(
+                                        color: AppColors.textPrimary,
+                                        fontWeight:
+                                            isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -167,7 +260,28 @@ class _TeacherStudentAnalysisPageState
                       ],
                     ),
                   )
-                : analysisState.isLoading
+                : _selectedBookId == null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.menu_book_outlined,
+                              size: 64,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Öğrencinin hangi kitaptaki analizini görmek istediğinizi seçin',
+                              style: AppTextStyles.body1.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      )
+                    : analysisState.isLoading
                     ? const Center(child: CircularProgressIndicator())
                     : analysisState.error != null
                         ? Center(
@@ -227,7 +341,10 @@ class _TeacherStudentAnalysisPageState
                                           .read(
                                               teacherStudentAnalysisProvider
                                                   .notifier)
-                                          .loadStudentAnalysis(_selectedStudentId!);
+                                          .loadStudentAnalysis(
+                                            _selectedStudentId!,
+                                            bookId: _selectedBookId,
+                                          );
                                     },
                                     child: SingleChildScrollView(
                                       padding: const EdgeInsets.all(

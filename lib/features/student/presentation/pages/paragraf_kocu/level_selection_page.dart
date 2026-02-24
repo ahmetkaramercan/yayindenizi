@@ -60,6 +60,50 @@ class LevelSelectionPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Kitap Analizim butonu
+                AppCard(
+                  onTap: () {
+                    context.push(
+                      '/student/book-analysis',
+                      extra: {'bookId': book.id, 'bookTitle': book.title},
+                    );
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.analytics_outlined,
+                        size: 32,
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: AppConstants.paddingM),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Kitap Analizim',
+                              style: AppTextStyles.h6.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Bu kitaptaki kazanım analizinizi görüntüleyin',
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textSecondary,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppConstants.paddingL),
                 Text(
                   'Seviye Seçin',
                   style: AppTextStyles.h4.copyWith(
@@ -100,6 +144,8 @@ class LevelSelectionPage extends ConsumerWidget {
                             'sectionId': section['id'],
                             'sectionTitle': section['title'] ?? 'Bölüm ${index + 1}',
                             'bookTitle': book.title,
+                            'bookId': book.id,
+                            'isParagrafBook': book.category == BookCategory.paragraf,
                           },
                         );
                       },

@@ -1,26 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../student/domain/entities/student_analysis.dart';
-import '../../../student/domain/entities/learning_outcome.dart';
+import '../../domain/entities/student_analysis.dart';
+import '../../domain/entities/learning_outcome.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../student/data/repositories/analytics_repository.dart';
+import '../../data/repositories/analytics_repository.dart';
 
-class TeacherStudentAnalysisState {
+class BookAnalysisState {
   final StudentAnalysis? analysis;
   final bool isLoading;
   final String? error;
 
-  TeacherStudentAnalysisState({
+  BookAnalysisState({
     this.analysis,
     this.isLoading = false,
     this.error,
   });
 
-  TeacherStudentAnalysisState copyWith({
+  BookAnalysisState copyWith({
     StudentAnalysis? analysis,
     bool? isLoading,
     String? error,
   }) {
-    return TeacherStudentAnalysisState(
+    return BookAnalysisState(
       analysis: analysis ?? this.analysis,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -28,17 +28,19 @@ class TeacherStudentAnalysisState {
   }
 }
 
-class TeacherStudentAnalysisNotifier
-    extends StateNotifier<TeacherStudentAnalysisState> {
-  TeacherStudentAnalysisNotifier() : super(TeacherStudentAnalysisState());
-
+class BookAnalysisNotifier extends StateNotifier<BookAnalysisState> {
+  final String bookId;
   final _analyticsRepo = sl<AnalyticsRepository>();
 
-  Future<void> loadStudentAnalysis(String studentId, {String? bookId}) async {
+  BookAnalysisNotifier(this.bookId) : super(BookAnalysisState()) {
+    loadAnalysis();
+  }
+
+  Future<void> loadAnalysis() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final data = await _analyticsRepo.getStudentFull(studentId, bookId: bookId);
+      final data = await _analyticsRepo.getMyFull(bookId: bookId);
 
       final rawOutcomes =
           data['learningOutcomes'] as List? ?? data['learningOutcomeStats'] as List? ?? [];
@@ -76,7 +78,7 @@ class TeacherStudentAnalysisNotifier
           data['totalIncorrect'] ?? overview?['totalIncorrect'] ?? 0;
 
       final analysis = StudentAnalysis(
-        studentId: studentId,
+        studentId: data['studentId'] ?? '',
         learningOutcomeProgress: learningOutcomeProgress,
         totalTestsCompleted: totalTests as int,
         overallSuccessPercentage: _toDouble(overallSuccess),
@@ -103,8 +105,8 @@ class TeacherStudentAnalysisNotifier
   }
 }
 
-final teacherStudentAnalysisProvider =
-    StateNotifierProvider<TeacherStudentAnalysisNotifier,
-        TeacherStudentAnalysisState>((ref) {
-  return TeacherStudentAnalysisNotifier();
+final bookAnalysisProvider =
+    StateNotifierProvider.family<BookAnalysisNotifier, BookAnalysisState, String>(
+        (ref, bookId) {
+  return BookAnalysisNotifier(bookId);
 });

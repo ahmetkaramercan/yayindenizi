@@ -10,6 +10,8 @@ import '../../features/student/presentation/pages/paragraf_kocu/level_selection_
 import '../../features/student/presentation/pages/paragraf_kocu/section_test_list_page.dart';
 import '../../features/student/presentation/pages/paragraf_kocu/test_page.dart';
 import '../../features/student/presentation/pages/paragraf_kocu/analysis_page.dart';
+import '../../features/student/presentation/pages/paragraf_kocu/section_analysis_page.dart';
+import '../../features/student/presentation/pages/analysis/book_analysis_page.dart';
 import '../../features/student/domain/entities/book.dart';
 import '../../features/student/presentation/pages/deneme_kitaplari/mock_test_list_page.dart';
 import '../../features/student/presentation/pages/deneme_kitaplari/mock_test_page.dart';
@@ -20,7 +22,6 @@ import '../../features/student/presentation/pages/konu_kitaplari/topic_test_list
 import '../../features/student/presentation/pages/konu_kitaplari/topic_test_page.dart';
 import '../../features/student/presentation/pages/konu_kitaplari/topic_test_result_page.dart';
 import '../../features/student/presentation/pages/konu_kitaplari/topic_analysis_page.dart';
-import '../../features/student/presentation/pages/analysis/student_analysis_page.dart';
 import '../../features/teacher/presentation/pages/teacher_dashboard_page.dart';
 import '../../features/teacher/presentation/pages/student_analysis_page.dart';
 import '../../features/teacher/presentation/pages/student_detail_page.dart';
@@ -88,6 +89,8 @@ final appRouter = GoRouter(
           sectionId: extra['sectionId'] as String,
           sectionTitle: extra['sectionTitle'] as String,
           bookTitle: extra['bookTitle'] as String,
+          bookId: extra['bookId'] as String?,
+          isParagrafBook: extra['isParagrafBook'] as bool? ?? false,
         );
       },
     ),
@@ -162,9 +165,27 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/student/analysis',
-      name: 'student-analysis',
-      builder: (context, state) => const StudentAnalysisPage(),
+      path: '/student/book-analysis',
+      name: 'book-analysis',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return BookAnalysisPage(
+          bookId: extra['bookId'] as String,
+          bookTitle: extra['bookTitle'] as String,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/student/section-analysis',
+      name: 'section-analysis',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return SectionAnalysisPage(
+          sectionId: extra['sectionId'] as String,
+          sectionTitle: extra['sectionTitle'] as String,
+          bookTitle: extra['bookTitle'] as String,
+        );
+      },
     ),
     GoRoute(
       path: '/teacher/student-analysis',

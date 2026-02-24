@@ -7,6 +7,8 @@ import '../../features/student/presentation/providers/topic_provider.dart';
 import '../../features/student/presentation/providers/mock_test_provider.dart';
 import '../../features/student/presentation/providers/mock_test_analysis_provider.dart';
 import '../../features/student/presentation/providers/student_analysis_provider.dart';
+import '../../features/student/presentation/providers/book_analysis_provider.dart';
+import '../../features/student/presentation/providers/section_analysis_provider.dart';
 import '../../features/student/presentation/providers/add_teacher_provider.dart';
 import '../../features/teacher/presentation/providers/teacher_dashboard_provider.dart';
 import '../../features/teacher/presentation/providers/teacher_student_detail_provider.dart';
@@ -24,6 +26,8 @@ final invalidateUserProvidersProvider = Provider<void Function()>((ref) {
     ref.invalidate(mockTestProvider);
     ref.invalidate(mockTestAnalysisProvider);
     ref.invalidate(studentAnalysisProvider);
+    ref.invalidate(bookAnalysisProvider);
+    ref.invalidate(sectionAnalysisProvider);
     ref.invalidate(addTeacherProvider);
     ref.invalidate(teacherDashboardProvider);
     ref.invalidate(teacherStudentDetailProvider);

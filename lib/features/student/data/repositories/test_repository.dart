@@ -113,7 +113,14 @@ class TestRepository {
   // ─── Helpers ───────────────────────────────────────────────────────────
 
   Question _questionFromJson(Map<String, dynamic> q) {
-    final lo = q['learningOutcome'] as Map<String, dynamic>?;
+    var lo = q['learningOutcome'] as Map<String, dynamic>?;
+    if (lo == null) {
+      final qoList = q['questionOutcomes'] as List?;
+      if (qoList != null && qoList.isNotEmpty) {
+        final first = qoList.first as Map<String, dynamic>;
+        lo = first['learningOutcome'] as Map<String, dynamic>?;
+      }
+    }
     return Question(
       id: q['id'],
       text: q['text'] ?? '',
