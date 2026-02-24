@@ -12,6 +12,7 @@ import { LearningOutcomesModule } from './modules/learning-outcomes/learning-out
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { TeacherStudentModule } from './modules/teacher-student/teacher-student.module';
 import { AnswersModule } from './modules/answers/answers.module';
+import { CitiesModule } from './modules/cities/cities.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -29,6 +30,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     AnalyticsModule,
     TeacherStudentModule,
     AnswersModule,
+    CitiesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

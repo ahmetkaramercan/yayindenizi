@@ -8,6 +8,7 @@ import {
 import { Role, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '@/prisma/prisma.service';
+import { CitiesService } from '@/modules/cities/cities.service';
 import { generateTeacherCode } from '@/common/utils/generate-code';
 import {
   CreateStudentDto,
@@ -27,8 +28,10 @@ const USER_SAFE_SELECT = {
   email: true,
   role: true,
   adSoyad: true,
-  il: true,
-  ilce: true,
+  cityId: true,
+  districtId: true,
+  city: { select: { id: true, name: true } },
+  district: { select: { id: true, name: true } },
   okul: true,
   ogretmenKodu: true,
   createdAt: true,
@@ -39,12 +42,16 @@ const USER_SAFE_SELECT = {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private citiesService: CitiesService,
+  ) {}
 
   // ─── Creation ──────────────────────────────────────────────────────────
 
   async createStudent(dto: CreateStudentDto) {
     await this.ensureEmailAvailable(dto.email);
+    await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
     const user = await this.prisma.user.create({
@@ -53,8 +60,8 @@ export class UsersService {
         password: hashedPassword,
         role: Role.STUDENT,
         adSoyad: dto.adSoyad,
-        il: dto.il,
-        ilce: dto.ilce,
+        cityId: dto.cityId,
+        districtId: dto.districtId,
       },
       select: USER_SAFE_SELECT,
     });
@@ -65,6 +72,7 @@ export class UsersService {
 
   async createTeacher(dto: CreateTeacherDto) {
     await this.ensureEmailAvailable(dto.email);
+    await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
     const ogretmenKodu = await this.generateUniqueTeacherCode();
 
@@ -74,8 +82,8 @@ export class UsersService {
         password: hashedPassword,
         role: Role.TEACHER,
         adSoyad: dto.adSoyad,
-        il: dto.il,
-        ilce: dto.ilce,
+        cityId: dto.cityId,
+        districtId: dto.districtId,
         okul: dto.okul,
         ogretmenKodu,
       },
@@ -206,6 +214,9 @@ export class UsersService {
   }
 
   async updateStudent(userId: string, dto: UpdateStudentDto) {
+    if (dto.districtId && dto.cityId) {
+      await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    }
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,
@@ -230,6 +241,9 @@ export class UsersService {
   }
 
   async updateTeacher(userId: string, dto: UpdateTeacherDto) {
+    if (dto.districtId && dto.cityId) {
+      await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    }
     return this.prisma.user.update({
       where: { id: userId },
       data: dto,

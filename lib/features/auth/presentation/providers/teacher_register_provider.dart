@@ -35,8 +35,8 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
     required String adSoyad,
     required String email,
     required String password,
-    String? il,
-    String? ilce,
+    required String cityId,
+    required String districtId,
     String? okul,
     required String ogretmenKodu,
   }) async {
@@ -47,8 +47,8 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
         email: email,
         password: password,
         adSoyad: adSoyad,
-        il: il ?? '',
-        ilce: ilce ?? '',
+        cityId: cityId,
+        districtId: districtId,
         okul: okul ?? '',
       );
 

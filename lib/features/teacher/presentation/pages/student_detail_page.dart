@@ -109,13 +109,10 @@ class StudentDetailPage extends ConsumerWidget {
                                               color: AppColors.textSecondary,
                                             ),
                                           ),
-                                          if (detailState.student!.il != null ||
-                                              detailState.student!.ilce !=
-                                                  null) ...[
+                                          if (detailState.student!.locationDisplay != null) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${detailState.student!.il ?? ''} ${detailState.student!.ilce ?? ''}'
-                                                  .trim(),
+                                              detailState.student!.locationDisplay!,
                                               style: AppTextStyles.caption
                                                   .copyWith(
                                                 color: AppColors.textSecondary,

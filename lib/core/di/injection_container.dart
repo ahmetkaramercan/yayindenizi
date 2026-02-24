@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../storage/token_storage.dart';
 import '../network/api_client.dart';
 import '../../features/auth/data/repositories/auth_repository.dart';
+import '../../features/cities/data/repositories/cities_repository.dart';
 import '../../features/student/data/repositories/book_repository.dart';
 import '../../features/student/data/repositories/test_repository.dart';
 import '../../features/student/data/repositories/analytics_repository.dart';
@@ -21,6 +22,9 @@ Future<void> init() async {
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepository(sl<ApiClient>(), sl<TokenStorage>()),
+  );
+  sl.registerLazySingleton<CitiesRepository>(
+    () => CitiesRepository(sl<ApiClient>()),
   );
   sl.registerLazySingleton<BookRepository>(
     () => BookRepository(sl<ApiClient>()),

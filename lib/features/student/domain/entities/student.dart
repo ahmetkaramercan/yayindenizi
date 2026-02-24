@@ -5,8 +5,10 @@ class Student extends Equatable {
   final String adSoyad;
   final String email;
   final String? sifre;
-  final String? il;
-  final String? ilce;
+  final String? cityId;
+  final String? districtId;
+  final String? cityName;
+  final String? districtName;
   final List<String> bagliOgretmenler; // Öğretmen ID'leri
 
   const Student({
@@ -14,10 +16,23 @@ class Student extends Equatable {
     required this.adSoyad,
     required this.email,
     this.sifre,
-    this.il,
-    this.ilce,
+    this.cityId,
+    this.districtId,
+    this.cityName,
+    this.districtName,
     this.bagliOgretmenler = const [],
   });
+
+  /// Display string for location (e.g. "İstanbul, Kadıköy")
+  String? get locationDisplay {
+    if (cityName != null && cityName!.isNotEmpty) {
+      if (districtName != null && districtName!.isNotEmpty) {
+        return '$cityName, $districtName';
+      }
+      return cityName;
+    }
+    return null;
+  }
 
   @override
   List<Object?> get props => [
@@ -25,8 +40,10 @@ class Student extends Equatable {
         adSoyad,
         email,
         sifre,
-        il,
-        ilce,
+        cityId,
+        districtId,
+        cityName,
+        districtName,
         bagliOgretmenler,
       ];
 
@@ -35,8 +52,10 @@ class Student extends Equatable {
     String? adSoyad,
     String? email,
     String? sifre,
-    String? il,
-    String? ilce,
+    String? cityId,
+    String? districtId,
+    String? cityName,
+    String? districtName,
     List<String>? bagliOgretmenler,
   }) {
     return Student(
@@ -44,8 +63,10 @@ class Student extends Equatable {
       adSoyad: adSoyad ?? this.adSoyad,
       email: email ?? this.email,
       sifre: sifre ?? this.sifre,
-      il: il ?? this.il,
-      ilce: ilce ?? this.ilce,
+      cityId: cityId ?? this.cityId,
+      districtId: districtId ?? this.districtId,
+      cityName: cityName ?? this.cityName,
+      districtName: districtName ?? this.districtName,
       bagliOgretmenler: bagliOgretmenler ?? this.bagliOgretmenler,
     );
   }

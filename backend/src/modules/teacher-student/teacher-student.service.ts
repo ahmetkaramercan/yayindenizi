@@ -13,8 +13,10 @@ const STUDENT_SELECT = {
   id: true,
   email: true,
   adSoyad: true,
-  il: true,
-  ilce: true,
+  cityId: true,
+  districtId: true,
+  city: { select: { id: true, name: true } },
+  district: { select: { id: true, name: true } },
   createdAt: true,
 } as const;
 
@@ -24,8 +26,10 @@ const TEACHER_SELECT = {
   adSoyad: true,
   ogretmenKodu: true,
   okul: true,
-  il: true,
-  ilce: true,
+  cityId: true,
+  districtId: true,
+  city: { select: { id: true, name: true } },
+  district: { select: { id: true, name: true } },
 } as const;
 
 @Injectable()

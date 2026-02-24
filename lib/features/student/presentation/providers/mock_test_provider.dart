@@ -2,6 +2,7 @@ import 'dart:developer' as dev;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/mock_test.dart';
 import '../../domain/entities/mock_test_result.dart';
+import '../../domain/utils/test_result_calculator.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../data/repositories/test_repository.dart';
 
@@ -132,57 +133,42 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
       if (data == null) return null;
 
       final answersData = data['answers'] as List? ?? [];
-      final answerResults = <MockAnswerResult>[];
+      final answers = TestResultCalculator.answersFromApi(answersData);
+      final calc = TestResultCalculator.calculate(
+        questions: test.questions,
+        answers: answers,
+      );
 
-      for (final a in answersData) {
-        final answer = a as Map<String, dynamic>;
-        final question = answer['question'] as Map<String, dynamic>?;
-        final selectedIndex = answer['selectedIndex'] as int?;
-        final isCorrect = answer['isCorrect'] == true;
-
+      final answerResults = calc.answers.map((a) {
         AnswerStatus status;
-        if (selectedIndex == null) {
+        if (a.isEmpty) {
           status = AnswerStatus.empty;
-        } else if (isCorrect) {
+        } else if (a.isCorrect) {
           status = AnswerStatus.correct;
         } else {
           status = AnswerStatus.wrong;
         }
-
-        answerResults.add(MockAnswerResult(
-          questionId: answer['questionId'] ?? '',
-          selectedAnswerIndex: selectedIndex,
+        return MockAnswerResult(
+          questionId: a.questionId,
+          selectedAnswerIndex: a.selectedIndex,
           status: status,
-          correctAnswerIndex: question?['correctAnswerIndex'] ?? 0,
-        ));
-      }
+          correctAnswerIndex: a.correctAnswerIndex,
+        );
+      }).toList();
 
-      final totalQuestions = answerResults.length;
-      final correctAnswers = answerResults.where((a) => a.status == AnswerStatus.correct).length;
-      final wrongAnswers = answerResults.where((a) => a.status == AnswerStatus.wrong).length;
-      final emptyAnswers = answerResults.where((a) => a.status == AnswerStatus.empty).length;
-      final successPercentage = totalQuestions > 0
-          ? (correctAnswers / totalQuestions) * 100
-          : 0.0;
-
-      final learningOutcomeStats = <String, int>{};
-      for (final answer in answerResults) {
-        if (answer.status == AnswerStatus.correct) {
-          final q = test.questions.where((q) => q.id == answer.questionId);
-          final outcomeId = q.isNotEmpty ? (q.first.learningOutcome?.id ?? 'general') : 'general';
-          learningOutcomeStats[outcomeId] = (learningOutcomeStats[outcomeId] ?? 0) + 1;
-        }
-      }
+      final learningOutcomeStats = calc.outcomeStats.map(
+        (k, v) => MapEntry(k, v.correct),
+      );
 
       return MockTestResult(
         testId: testId,
         testTitle: test.title,
         answers: answerResults,
-        totalQuestions: totalQuestions,
-        correctAnswers: correctAnswers,
-        wrongAnswers: wrongAnswers,
-        emptyAnswers: emptyAnswers,
-        successPercentage: successPercentage,
+        totalQuestions: calc.totalQuestions,
+        correctAnswers: calc.correctAnswers,
+        wrongAnswers: calc.wrongAnswers,
+        emptyAnswers: calc.emptyAnswers,
+        successPercentage: calc.successPercentage,
         completedAt: DateTime.tryParse(data['finishedAt']?.toString() ?? '') ?? DateTime.now(),
         learningOutcomeStats: learningOutcomeStats,
       );
@@ -196,56 +182,41 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
     final test = state.currentTest;
     if (test == null) return;
 
-    final answerResults = test.questions.map((question) {
-      final selectedAnswer = answers[question.id];
-      AnswerStatus status;
+    final calc = TestResultCalculator.calculate(
+      questions: test.questions,
+      answers: answers,
+    );
 
-      if (selectedAnswer == null) {
+    final answerResults = calc.answers.map((a) {
+      AnswerStatus status;
+      if (a.isEmpty) {
         status = AnswerStatus.empty;
-      } else if (selectedAnswer == question.correctAnswerIndex) {
+      } else if (a.isCorrect) {
         status = AnswerStatus.correct;
       } else {
         status = AnswerStatus.wrong;
       }
-
       return MockAnswerResult(
-        questionId: question.id,
-        selectedAnswerIndex: selectedAnswer,
+        questionId: a.questionId,
+        selectedAnswerIndex: a.selectedIndex,
         status: status,
-        correctAnswerIndex: question.correctAnswerIndex,
+        correctAnswerIndex: a.correctAnswerIndex,
       );
     }).toList();
 
-    final totalQuestions = answerResults.length;
-    final correctAnswers =
-        answerResults.where((a) => a.status == AnswerStatus.correct).length;
-    final wrongAnswers =
-        answerResults.where((a) => a.status == AnswerStatus.wrong).length;
-    final emptyAnswers =
-        answerResults.where((a) => a.status == AnswerStatus.empty).length;
-    final successPercentage = totalQuestions > 0
-        ? (correctAnswers / totalQuestions) * 100
-        : 0.0;
-
-    final learningOutcomeStats = <String, int>{};
-    for (final answer in answerResults) {
-      if (answer.status == AnswerStatus.correct) {
-        final question = test.questions.firstWhere((q) => q.id == answer.questionId);
-        final outcomeId = question.learningOutcome?.id ?? 'general';
-        learningOutcomeStats[outcomeId] =
-            (learningOutcomeStats[outcomeId] ?? 0) + 1;
-      }
-    }
+    final learningOutcomeStats = calc.outcomeStats.map(
+      (k, v) => MapEntry(k, v.correct),
+    );
 
     final result = MockTestResult(
       testId: test.id,
       testTitle: test.title,
       answers: answerResults,
-      totalQuestions: totalQuestions,
-      correctAnswers: correctAnswers,
-      wrongAnswers: wrongAnswers,
-      emptyAnswers: emptyAnswers,
-      successPercentage: successPercentage,
+      totalQuestions: calc.totalQuestions,
+      correctAnswers: calc.correctAnswers,
+      wrongAnswers: calc.wrongAnswers,
+      emptyAnswers: calc.emptyAnswers,
+      successPercentage: calc.successPercentage,
       completedAt: DateTime.now(),
       learningOutcomeStats: learningOutcomeStats,
     );

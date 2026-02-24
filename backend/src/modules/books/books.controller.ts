@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Role, BookCategory } from '@prisma/client';
 import { BooksService } from './books.service';
@@ -30,21 +40,21 @@ export class BooksController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Kitap detayı (bölümler dahil)' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.booksService.findOne(id);
   }
 
   @Patch(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Kitap güncelle (Admin)' })
-  update(@Param('id') id: string, @Body() dto: UpdateBookDto) {
+  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateBookDto) {
     return this.booksService.update(id, dto);
   }
 
   @Delete(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Kitap sil (Admin)' })
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.booksService.remove(id);
   }
 }

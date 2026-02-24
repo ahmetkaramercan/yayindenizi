@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/learning_outcome.dart';
 import '../../domain/entities/test.dart';
 import '../../domain/entities/test_result.dart';
+import '../../domain/utils/test_result_calculator.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../data/repositories/test_repository.dart';
 
@@ -92,52 +93,34 @@ class TestNotifier extends StateNotifier<TestState> {
       if (data == null) return null;
 
       final answersData = data['answers'] as List? ?? [];
-      final answerResults = <AnswerResult>[];
+      final answers = TestResultCalculator.answersFromApi(answersData);
+      final calc = TestResultCalculator.calculate(
+        questions: test.questions,
+        answers: answers,
+      );
 
-      for (final a in answersData) {
-        final answer = a as Map<String, dynamic>;
-        final question = answer['question'] as Map<String, dynamic>?;
-        answerResults.add(AnswerResult(
-          questionId: answer['questionId'] ?? '',
-          selectedAnswerIndex: answer['selectedIndex'] as int?,
-          isCorrect: answer['isCorrect'] == true,
-          correctAnswerIndex: question?['correctAnswerIndex'] ?? 0,
-        ));
-      }
+      final answerResults = calc.answers
+          .map((a) => AnswerResult(
+                questionId: a.questionId,
+                selectedAnswerIndex: a.selectedIndex,
+                isCorrect: a.isCorrect,
+                correctAnswerIndex: a.correctAnswerIndex,
+              ))
+          .toList();
 
-      final totalQuestions = answerResults.length;
-      final correctAnswers = answerResults.where((a) => a.isCorrect).length;
-      final wrongAnswers = answerResults.where((a) => !a.isCorrect && a.selectedAnswerIndex != null).length;
-      final successPercentage = totalQuestions > 0
-          ? (correctAnswers / totalQuestions) * 100
-          : 0.0;
-
-      final learningOutcomeMap = <String, List<AnswerResult>>{};
-      for (final answer in answerResults) {
-        final q = test.questions.where((q) => q.id == answer.questionId);
-        final outcomeId = q.isNotEmpty ? (q.first.learningOutcome?.id ?? 'general') : 'general';
-        learningOutcomeMap.putIfAbsent(outcomeId, () => []).add(answer);
-      }
-
-      final learningOutcomeStats = learningOutcomeMap.entries.map((entry) {
-        final outcomeId = entry.key;
-        final answers = entry.value;
-        final total = answers.length;
-        final correct = answers.where((a) => a.isCorrect).length;
-        final wrong = total - correct;
-        final percentage = total > 0 ? (correct / total) * 100 : 0.0;
-
+      final learningOutcomeStats = calc.outcomeStats.entries.map((entry) {
+        final data = entry.value;
         final matchingQ = test.questions.where(
-          (q) => (q.learningOutcome?.id ?? 'general') == outcomeId,
+          (q) => (q.learningOutcome?.id ?? 'general') == entry.key,
         );
         final outcome = matchingQ.isNotEmpty ? matchingQ.first.learningOutcome : null;
 
         return LearningOutcomeStats(
           learningOutcome: outcome ?? const LearningOutcome(id: 'general', name: 'Genel'),
-          totalQuestions: total,
-          correctAnswers: correct,
-          wrongAnswers: wrong,
-          successPercentage: percentage,
+          totalQuestions: data.total,
+          correctAnswers: data.correct,
+          wrongAnswers: data.wrong,
+          successPercentage: data.percentage,
         );
       }).toList();
 
@@ -145,10 +128,10 @@ class TestNotifier extends StateNotifier<TestState> {
         testId: testId,
         level: test.level,
         answers: answerResults,
-        totalQuestions: totalQuestions,
-        correctAnswers: correctAnswers,
-        wrongAnswers: wrongAnswers,
-        successPercentage: successPercentage,
+        totalQuestions: calc.totalQuestions,
+        correctAnswers: calc.correctAnswers,
+        wrongAnswers: calc.wrongAnswers,
+        successPercentage: calc.successPercentage,
         learningOutcomeStats: learningOutcomeStats,
       );
     } catch (e) {
@@ -161,56 +144,33 @@ class TestNotifier extends StateNotifier<TestState> {
     final test = state.test;
     if (test == null) return;
 
-    final answerResults = test.questions.map((question) {
-      final selectedAnswer = answers[question.id];
-      final isCorrect = selectedAnswer != null && selectedAnswer == question.correctAnswerIndex;
+    final calc = TestResultCalculator.calculate(
+      questions: test.questions,
+      answers: answers,
+    );
 
-      return AnswerResult(
-        questionId: question.id,
-        selectedAnswerIndex: selectedAnswer,
-        isCorrect: isCorrect,
-        correctAnswerIndex: question.correctAnswerIndex,
+    final answerResults = calc.answers
+        .map((a) => AnswerResult(
+              questionId: a.questionId,
+              selectedAnswerIndex: a.selectedIndex,
+              isCorrect: a.isCorrect,
+              correctAnswerIndex: a.correctAnswerIndex,
+            ))
+        .toList();
+
+    final learningOutcomeStats = calc.outcomeStats.entries.map((entry) {
+      final data = entry.value;
+      final matchingQ = test.questions.where(
+        (q) => (q.learningOutcome?.id ?? 'general') == entry.key,
       );
-    }).toList();
-
-    final totalQuestions = answerResults.length;
-    final correctAnswers = answerResults.where((a) => a.isCorrect).length;
-    final wrongAnswers = answerResults.where((a) => !a.isCorrect && a.selectedAnswerIndex != null).length;
-    final successPercentage = totalQuestions > 0
-        ? (correctAnswers / totalQuestions) * 100
-        : 0.0;
-
-    final learningOutcomeMap = <String, List<AnswerResult>>{};
-
-    for (final answer in answerResults) {
-      final question = test.questions.firstWhere((q) => q.id == answer.questionId);
-      final outcomeId = question.learningOutcome?.id ?? 'general';
-
-      if (!learningOutcomeMap.containsKey(outcomeId)) {
-        learningOutcomeMap[outcomeId] = [];
-      }
-      learningOutcomeMap[outcomeId]!.add(answer);
-    }
-
-    final learningOutcomeStats = learningOutcomeMap.entries.map((entry) {
-      final outcomeId = entry.key;
-      final answers = entry.value;
-      final total = answers.length;
-      final correct = answers.where((a) => a.isCorrect).length;
-      final wrong = total - correct;
-      final percentage = total > 0 ? (correct / total) * 100 : 0.0;
-
-      final outcome = test.questions
-          .where((q) => (q.learningOutcome?.id ?? 'general') == outcomeId)
-          .first
-          .learningOutcome;
+      final outcome = matchingQ.isNotEmpty ? matchingQ.first.learningOutcome : null;
 
       return LearningOutcomeStats(
         learningOutcome: outcome ?? const LearningOutcome(id: 'general', name: 'Genel'),
-        totalQuestions: total,
-        correctAnswers: correct,
-        wrongAnswers: wrong,
-        successPercentage: percentage,
+        totalQuestions: data.total,
+        correctAnswers: data.correct,
+        wrongAnswers: data.wrong,
+        successPercentage: data.percentage,
       );
     }).toList();
 
@@ -218,10 +178,10 @@ class TestNotifier extends StateNotifier<TestState> {
       testId: test.id,
       level: test.level,
       answers: answerResults,
-      totalQuestions: totalQuestions,
-      correctAnswers: correctAnswers,
-      wrongAnswers: wrongAnswers,
-      successPercentage: successPercentage,
+      totalQuestions: calc.totalQuestions,
+      correctAnswers: calc.correctAnswers,
+      wrongAnswers: calc.wrongAnswers,
+      successPercentage: calc.successPercentage,
       learningOutcomeStats: learningOutcomeStats,
     );
 

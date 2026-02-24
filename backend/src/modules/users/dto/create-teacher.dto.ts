@@ -26,12 +26,12 @@ export class CreateTeacherDto {
   adSoyad: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'İl boş bırakılamaz' })
-  il: string;
+  @IsNotEmpty({ message: 'İl seçimi zorunludur' })
+  cityId: string;
 
   @IsString()
-  @IsNotEmpty({ message: 'İlçe boş bırakılamaz' })
-  ilce: string;
+  @IsNotEmpty({ message: 'İlçe seçimi zorunludur' })
+  districtId: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Okul adı boş bırakılamaz' })

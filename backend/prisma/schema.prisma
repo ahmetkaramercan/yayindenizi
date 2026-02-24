@@ -21,6 +21,29 @@ enum BookCategory {
   KONU
 }
 
+// ─── City & District (Türkiye il/ilçe) ─────────────────────────────────────
+
+model City {
+  id        String     @id @default(uuid())
+  name      String
+  districts District[]
+  users     User[]
+
+  @@map("cities")
+}
+
+model District {
+  id     String @id @default(uuid())
+  name   String
+  cityId String @map("city_id")
+
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  users  User[]
+
+  @@index([cityId])
+  @@map("districts")
+}
+
 // ─── User ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -29,11 +52,13 @@ model User {
   password     String
   role         Role
   adSoyad      String   @map("ad_soyad")
-  il           String   @default("")
-  ilce         String   @default("")
+  cityId       String?  @map("city_id")
+  districtId   String?  @map("district_id")
   okul         String?
   ogretmenKodu String?  @unique @map("ogretmen_kodu")
 
+  city         City?    @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  district     District? @relation(fields: [districtId], references: [id], onDelete: SetNull)
   teacherOf        TeacherStudent[]  @relation("TeacherRelation")
   studentOf        TeacherStudent[]  @relation("StudentRelation")
   results          Result[]
@@ -45,6 +70,8 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([role])
+  @@index([cityId])
+  @@index([districtId])
   @@map("users")
 }
 

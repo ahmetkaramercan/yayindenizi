@@ -18,6 +18,11 @@ async function main() {
     },
   });
 
+  // Istanbul cityId=40, Kadıköy districtId=470, Beşiktaş districtId=457 (from Turkey.json)
+  const istanbulCityId = '40';
+  const kadikoyDistrictId = '470';
+  const besiktasDistrictId = '457';
+
   // Teacher
   const teacher = await prisma.user.upsert({
     where: { email: 'ogretmen@yayindenizi.com' },
@@ -27,8 +32,8 @@ async function main() {
       password: hashedPassword,
       role: Role.TEACHER,
       adSoyad: 'Ahmet Yılmaz',
-      il: 'İstanbul',
-      ilce: 'Kadıköy',
+      cityId: istanbulCityId,
+      districtId: kadikoyDistrictId,
       okul: 'Atatürk Anadolu Lisesi',
       ogretmenKodu: 'OGR001',
     },
@@ -43,8 +48,8 @@ async function main() {
       password: hashedPassword,
       role: Role.STUDENT,
       adSoyad: 'Elif Demir',
-      il: 'İstanbul',
-      ilce: 'Beşiktaş',
+      cityId: istanbulCityId,
+      districtId: besiktasDistrictId,
     },
   });
 

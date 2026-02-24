@@ -1,4 +1,10 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { AnalyticsService } from './analytics.service';
@@ -74,7 +80,7 @@ export class AnalyticsController {
   async getStudentOverview(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
@@ -87,7 +93,7 @@ export class AnalyticsController {
   async getStudentSectionStats(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
@@ -100,7 +106,7 @@ export class AnalyticsController {
   async getStudentLearningOutcomeStats(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
@@ -113,7 +119,7 @@ export class AnalyticsController {
   async getStudentOutcomesByCategory(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
@@ -127,7 +133,7 @@ export class AnalyticsController {
   async getStudentWeakOutcomes(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
     @Query('threshold') threshold?: string,
   ) {
     if (role === Role.TEACHER) {
@@ -144,7 +150,7 @@ export class AnalyticsController {
   async getStudentFullAnalysis(
     @CurrentUser('id') teacherId: string,
     @CurrentUser('role') role: Role,
-    @Param('studentId') studentId: string,
+    @Param('studentId', ParseUUIDPipe) studentId: string,
   ) {
     if (role === Role.TEACHER) {
       await this.analyticsService.verifyTeacherAccess(teacherId, studentId);
@@ -155,7 +161,7 @@ export class AnalyticsController {
   // ─── Test result analytics ──────────────────────────────────────────
 
   @Get('result/:resultId')
-  getTestAnalysis(@Param('resultId') resultId: string) {
+  getTestAnalysis(@Param('resultId', ParseUUIDPipe) resultId: string) {
     return this.analyticsService.getTestAnalysis(resultId);
   }
 
@@ -163,7 +169,7 @@ export class AnalyticsController {
 
   @Get('admin/recalculate/:userId')
   @Roles(Role.ADMIN)
-  recalculate(@Param('userId') userId: string) {
+  recalculate(@Param('userId', ParseUUIDPipe) userId: string) {
     return this.analyticsService.recalculateOutcomeAnalytics(userId);
   }
 }

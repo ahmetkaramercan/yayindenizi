@@ -3,11 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/inputs/app_text_field.dart';
+import '../../../../core/widgets/inputs/city_district_selector.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../cities/data/models/city_model.dart';
+import '../../../cities/data/models/district_model.dart';
 import '../providers/student_register_provider.dart';
 
 class StudentRegisterPage extends ConsumerStatefulWidget {
@@ -24,10 +27,11 @@ class _StudentRegisterPageState extends ConsumerState<StudentRegisterPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
-  final _ilController = TextEditingController();
-  final _ilceController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscurePasswordConfirm = true;
+
+  CityModel? _selectedCity;
+  DistrictModel? _selectedDistrict;
 
   @override
   void dispose() {
@@ -35,23 +39,24 @@ class _StudentRegisterPageState extends ConsumerState<StudentRegisterPage> {
     _emailController.dispose();
     _passwordController.dispose();
     _passwordConfirmController.dispose();
-    _ilController.dispose();
-    _ilceController.dispose();
     super.dispose();
   }
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
+      if (_selectedCity == null || _selectedDistrict == null) {
+        context.showSnackBar(
+          'Lütfen il ve ilçe seçin.',
+          backgroundColor: AppColors.error,
+        );
+        return;
+      }
       ref.read(studentRegisterProvider.notifier).register(
             adSoyad: _adSoyadController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            il: _ilController.text.trim().isEmpty
-                ? null
-                : _ilController.text.trim(),
-            ilce: _ilceController.text.trim().isEmpty
-                ? null
-                : _ilceController.text.trim(),
+            cityId: _selectedCity!.id,
+            districtId: _selectedDistrict!.id,
           );
     }
   }
@@ -185,22 +190,14 @@ class _StudentRegisterPageState extends ConsumerState<StudentRegisterPage> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // İl Field
-                AppTextField(
-                  label: 'İl',
-                  hint: 'İl',
-                  controller: _ilController,
-                  keyboardType: TextInputType.name,
-                  prefixIcon: const Icon(Icons.location_city_outlined),
-                ),
-                const SizedBox(height: AppConstants.paddingM),
-                // İlçe Field
-                AppTextField(
-                  label: 'İlçe',
-                  hint: 'İlçe',
-                  controller: _ilceController,
-                  keyboardType: TextInputType.name,
-                  prefixIcon: const Icon(Icons.location_on_outlined),
+                // İl / İlçe Seçimi
+                CityDistrictSelector(
+                  selectedCityId: _selectedCity?.id,
+                  selectedDistrictId: _selectedDistrict?.id,
+                  selectedCityName: _selectedCity?.name,
+                  selectedDistrictName: _selectedDistrict?.name,
+                  onCitySelected: (c) => setState(() => _selectedCity = c),
+                  onDistrictSelected: (d) => setState(() => _selectedDistrict = d),
                 ),
                 const SizedBox(height: AppConstants.paddingL),
                 // Register Button

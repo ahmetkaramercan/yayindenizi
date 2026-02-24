@@ -10,8 +10,10 @@ class StudentModel extends Student {
     @JsonKey(name: 'ad_soyad') required super.adSoyad,
     required super.email,
     super.sifre,
-    super.il,
-    super.ilce,
+    super.cityId,
+    super.districtId,
+    super.cityName,
+    super.districtName,
     @JsonKey(name: 'bagli_ogretmenler', defaultValue: []) super.bagliOgretmenler,
   });
 
@@ -27,8 +29,10 @@ class StudentModel extends Student {
       adSoyad: adSoyad,
       email: email,
       sifre: sifre,
-      il: il,
-      ilce: ilce,
+      cityId: cityId,
+      districtId: districtId,
+      cityName: cityName,
+      districtName: districtName,
       bagliOgretmenler: bagliOgretmenler,
     );
   }
@@ -40,8 +44,10 @@ class StudentModel extends Student {
       adSoyad: student.adSoyad,
       email: student.email,
       sifre: student.sifre,
-      il: student.il,
-      ilce: student.ilce,
+      cityId: student.cityId,
+      districtId: student.districtId,
+      cityName: student.cityName,
+      districtName: student.districtName,
       bagliOgretmenler: student.bagliOgretmenler,
     );
   }

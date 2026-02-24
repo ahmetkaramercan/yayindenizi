@@ -10,26 +10,34 @@ class UserRepository {
   Future<Student> getStudentProfile() async {
     final data = await _api.get('/users/student/me');
     final map = data as Map<String, dynamic>;
+    final city = map['city'] as Map<String, dynamic>?;
+    final district = map['district'] as Map<String, dynamic>?;
     return Student(
       id: map['id'],
       adSoyad: map['adSoyad'] ?? '',
       email: map['email'] ?? '',
-      il: map['il'],
-      ilce: map['ilce'],
+      cityId: map['cityId'],
+      districtId: map['districtId'],
+      cityName: city?['name'],
+      districtName: district?['name'],
     );
   }
 
   Future<Teacher> getTeacherProfile() async {
     final data = await _api.get('/users/teacher/me');
     final map = data as Map<String, dynamic>;
+    final city = map['city'] as Map<String, dynamic>?;
+    final district = map['district'] as Map<String, dynamic>?;
     return Teacher(
       id: map['id'],
       adSoyad: map['adSoyad'] ?? '',
       email: map['email'] ?? '',
       ogretmenKodu: map['ogretmenKodu'] ?? '',
       okul: map['okul'],
-      il: map['il'],
-      ilce: map['ilce'],
+      cityId: map['cityId'],
+      districtId: map['districtId'],
+      cityName: city?['name'],
+      districtName: district?['name'],
     );
   }
 

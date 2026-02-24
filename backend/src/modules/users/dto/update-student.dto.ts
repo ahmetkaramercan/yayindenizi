@@ -9,9 +9,9 @@ export class UpdateStudentDto {
 
   @IsOptional()
   @IsString()
-  il?: string;
+  cityId?: string;
 
   @IsOptional()
   @IsString()
-  ilce?: string;
+  districtId?: string;
 }

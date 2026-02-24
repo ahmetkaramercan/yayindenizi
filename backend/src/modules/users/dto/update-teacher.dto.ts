@@ -9,11 +9,11 @@ export class UpdateTeacherDto {
 
   @IsOptional()
   @IsString()
-  il?: string;
+  cityId?: string;
 
   @IsOptional()
   @IsString()
-  ilce?: string;
+  districtId?: string;
 
   @IsOptional()
   @IsString()

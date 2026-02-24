@@ -272,42 +272,22 @@ class TeacherDashboardPage extends ConsumerWidget {
                               ),
                             ],
                           ),
-                          if (student.il != null || student.ilce != null) ...[
+                          if (student.locationDisplay != null) ...[
                             const SizedBox(height: AppConstants.paddingS),
                             Row(
                               children: [
-                                if (student.il != null) ...[
-                                  Icon(
-                                    Icons.location_city_outlined,
-                                    size: 16,
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 16,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  student.locationDisplay!,
+                                  style: AppTextStyles.caption.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    student.il!,
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                                if (student.il != null &&
-                                    student.ilce != null) ...[
-                                  const SizedBox(width: 16),
-                                ],
-                                if (student.ilce != null) ...[
-                                  Icon(
-                                    Icons.location_on_outlined,
-                                    size: 16,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    student.ilce!,
-                                    style: AppTextStyles.caption.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ],
                             ),
                           ],

@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { TestResultsService } from './test-results.service';
@@ -35,7 +43,7 @@ export class TestResultsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Sonuç detayı' })
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.testResultsService.findOne(id);
   }
 
@@ -43,7 +51,10 @@ export class TestResultsController {
   @Roles(Role.TEACHER, Role.ADMIN)
   @ApiOperation({ summary: 'Öğrencinin sonuçlarını getir (Öğretmen/Admin)' })
   @ApiQuery({ name: 'testId', required: false })
-  findByStudent(@Param('studentId') studentId: string, @Query('testId') testId?: string) {
+  findByStudent(
+    @Param('studentId', ParseUUIDPipe) studentId: string,
+    @Query('testId') testId?: string,
+  ) {
     return this.testResultsService.findByUser(studentId, testId);
   }
 }

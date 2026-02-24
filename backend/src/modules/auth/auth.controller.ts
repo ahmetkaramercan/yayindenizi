@@ -3,13 +3,11 @@ import {
   Post,
   Body,
   Get,
-  Req,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { Request } from 'express';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto } from './dto';
 import { CreateStudentDto, CreateTeacherDto } from '@/modules/users/dto';
@@ -62,17 +60,5 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   logout() {
     return { message: 'Logged out successfully' };
-  }
-
-  @Public()
-  @Get('debug-headers')
-  @ApiOperation({ summary: 'Debug: gelen headerları göster' })
-  debugHeaders(@Req() req: Request) {
-    const authHeader = req.headers['authorization'];
-    return {
-      hasAuthHeader: !!authHeader,
-      authHeaderPrefix: authHeader ? authHeader.substring(0, 20) + '...' : null,
-      allHeaders: Object.keys(req.headers),
-    };
   }
 }

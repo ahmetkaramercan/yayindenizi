@@ -60,12 +60,16 @@ class TeacherStudentDetailNotifier
       final detailData = await _relationRepo.getStudentDetail(studentId);
 
       final studentJson = detailData['student'] as Map<String, dynamic>? ?? detailData;
+      final city = studentJson['city'] as Map<String, dynamic>?;
+      final district = studentJson['district'] as Map<String, dynamic>?;
       final student = Student(
         id: studentJson['id'] ?? studentId,
         adSoyad: studentJson['adSoyad'] ?? '',
         email: studentJson['email'] ?? '',
-        il: studentJson['il'],
-        ilce: studentJson['ilce'],
+        cityId: studentJson['cityId'],
+        districtId: studentJson['districtId'],
+        cityName: city?['name'],
+        districtName: district?['name'],
       );
 
       // Try to load analytics (getStudentFull = kazanım verileri dahil)

@@ -22,14 +22,18 @@ class RelationRepository {
 
     return list.map((json) {
       final j = json as Map<String, dynamic>;
+      final city = j['city'] as Map<String, dynamic>?;
+      final district = j['district'] as Map<String, dynamic>?;
       return Teacher(
         id: j['id'],
         adSoyad: j['adSoyad'] ?? '',
         email: j['email'] ?? '',
         ogretmenKodu: j['ogretmenKodu'] ?? '',
         okul: j['okul'],
-        il: j['il'],
-        ilce: j['ilce'],
+        cityId: j['cityId'],
+        districtId: j['districtId'],
+        cityName: city?['name'],
+        districtName: district?['name'],
       );
     }).toList();
   }
@@ -58,12 +62,16 @@ class RelationRepository {
 
     return list.map((json) {
       final j = json as Map<String, dynamic>;
+      final city = j['city'] as Map<String, dynamic>?;
+      final district = j['district'] as Map<String, dynamic>?;
       return Student(
         id: j['id'],
         adSoyad: j['adSoyad'] ?? '',
         email: j['email'] ?? '',
-        il: j['il'],
-        ilce: j['ilce'],
+        cityId: j['cityId'],
+        districtId: j['districtId'],
+        cityName: city?['name'],
+        districtName: district?['name'],
       );
     }).toList();
   }
