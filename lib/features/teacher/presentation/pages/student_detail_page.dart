@@ -8,10 +8,14 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../student/domain/entities/student.dart';
 import '../../../student/domain/entities/student_analysis.dart';
+import '../../../student/domain/entities/book.dart';
 import '../../../student/domain/entities/test_history.dart';
 import '../providers/teacher_student_detail_provider.dart';
+import '../providers/teacher_student_analysis_provider.dart';
+import '../../../../core/di/injection_container.dart';
+import '../../../student/data/repositories/book_repository.dart';
 
-class StudentDetailPage extends ConsumerWidget {
+class StudentDetailPage extends ConsumerStatefulWidget {
   final String studentId;
 
   const StudentDetailPage({
@@ -20,8 +24,29 @@ class StudentDetailPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final detailState = ref.watch(teacherStudentDetailProvider(studentId));
+  ConsumerState<StudentDetailPage> createState() => _StudentDetailPageState();
+}
+
+class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
+  String? _selectedBookId;
+  List<Book> _books = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBooks();
+  }
+
+  Future<void> _loadBooks() async {
+    final repo = sl<BookRepository>();
+    final books = await repo.getBooks();
+    if (mounted) setState(() => _books = books);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detailState = ref.watch(teacherStudentDetailProvider(widget.studentId));
+    final analysisState = ref.watch(teacherStudentAnalysisProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -37,7 +62,14 @@ class StudentDetailPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.read(teacherStudentDetailProvider(studentId).notifier).loadData();
+          await ref
+              .read(teacherStudentDetailProvider(widget.studentId).notifier)
+              .loadData();
+          if (_selectedBookId != null) {
+            ref
+                .read(teacherStudentAnalysisProvider.notifier)
+                .loadStudentAnalysis(widget.studentId, bookId: _selectedBookId);
+          }
         },
         child: detailState.isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -129,59 +161,212 @@ class StudentDetailPage extends ConsumerWidget {
                           ),
                           const SizedBox(height: AppConstants.paddingL),
                         ],
-                        // Genel Başarı
-                        if (detailState.analysis != null) ...[
+                        // Kitap Seçimi ve Analiz
+                        Text(
+                          'Kitap Analizi',
+                          style: AppTextStyles.h5.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: AppConstants.paddingS),
+                        Text(
+                          'Öğrencinin hangi kitaptaki analizini görmek istediğinizi seçin',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppConstants.paddingM),
+                        if (_books.isNotEmpty)
+                          SizedBox(
+                            height: 48,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _books.length,
+                              itemBuilder: (context, index) {
+                                final book = _books[index];
+                                final isSelected = _selectedBookId == book.id;
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                    right: AppConstants.paddingS,
+                                  ),
+                                  child: InkWell(
+                                    onTap: () {
+                                      setState(() => _selectedBookId = book.id);
+                                      ref
+                                          .read(teacherStudentAnalysisProvider
+                                              .notifier)
+                                          .loadStudentAnalysis(
+                                            widget.studentId,
+                                            bookId: book.id,
+                                          );
+                                    },
+                                    borderRadius: BorderRadius.circular(
+                                        AppConstants.radiusM),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppConstants.paddingM,
+                                        vertical: AppConstants.paddingS,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.primaryLight
+                                                .withOpacity(0.2)
+                                            : AppColors.surface,
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : AppColors.border,
+                                          width: isSelected ? 2 : 1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                            AppConstants.radiusM),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          book.title,
+                                          style: AppTextStyles.body2.copyWith(
+                                            color: AppColors.textPrimary,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        const SizedBox(height: AppConstants.paddingL),
+                        if (_selectedBookId == null)
+                          AppCard(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.menu_book_outlined,
+                                  size: 48,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Analiz görmek için yukarıdan bir kitap seçin',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (analysisState.isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
+                        else if (analysisState.error != null)
+                          AppCard(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  size: 48,
+                                  color: AppColors.error,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  analysisState.error!,
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.error,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        else if (analysisState.analysis == null ||
+                            analysisState.analysis!.learningOutcomeProgress.isEmpty)
+                          AppCard(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.analytics_outlined,
+                                  size: 48,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Bu kitapta henüz analiz verisi yok',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
+                        else ...[
                           AppCard(
                             child: Column(
                               children: [
                                 Text(
-                                  'Genel Başarı',
+                                  'Genel İstatistikler',
                                   style: AppTextStyles.h5.copyWith(
                                     color: AppColors.textPrimary,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 20),
-                                SizedBox(
-                                  width: 80,
-                                  height: 80,
-                                  child: CircularProgressIndicator(
-                                    value: detailState.analysis!
-                                            .overallSuccessPercentage /
-                                        100,
-                                    strokeWidth: 10,
-                                    backgroundColor: AppColors.border,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      _getSuccessColor(detailState
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _DetailStatItem(
+                                      label: 'Tamamlanan Test',
+                                      value:
+                                          '${analysisState.analysis!.totalTestsCompleted}',
+                                      icon: Icons.quiz_outlined,
+                                    ),
+                                    _DetailStatItem(
+                                      label: 'Genel Başarı',
+                                      value:
+                                          '${analysisState.analysis!.overallSuccessPercentage.toInt()}%',
+                                      icon: Icons.trending_up,
+                                      color: _getSuccessColor(analysisState
                                           .analysis!.overallSuccessPercentage),
                                     ),
-                                  ),
+                                  ],
                                 ),
                                 const SizedBox(height: 16),
-                                Text(
-                                  '${detailState.analysis!.overallSuccessPercentage.toInt()}%',
-                                  style: AppTextStyles.h3.copyWith(
-                                    color: _getSuccessColor(detailState
-                                        .analysis!.overallSuccessPercentage),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${detailState.analysis!.totalTestsCompleted} Test Çözüldü',
-                                  style: AppTextStyles.body2.copyWith(
-                                    color: AppColors.textSecondary,
-                                  ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
+                                  children: [
+                                    _DetailStatItem(
+                                      label: 'Doğru',
+                                      value:
+                                          '${analysisState.analysis!.totalCorrect}',
+                                      icon: Icons.check_circle,
+                                      color: AppColors.success,
+                                    ),
+                                    _DetailStatItem(
+                                      label: 'Yanlış',
+                                      value:
+                                          '${analysisState.analysis!.totalIncorrect}',
+                                      icon: Icons.cancel,
+                                      color: AppColors.error,
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(height: AppConstants.paddingL),
-                        ],
-                        // Kazanım Bazlı Analiz
-                        if (detailState.analysis != null &&
-                            detailState.analysis!.learningOutcomeProgress
-                                .isNotEmpty) ...[
                           Text(
                             'Kazanım Bazlı Analiz',
                             style: AppTextStyles.h5.copyWith(
@@ -190,8 +375,8 @@ class StudentDetailPage extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: AppConstants.paddingM),
-                          ...(detailState
-                                  .analysis!.learningOutcomeProgress.values
+                          ...(analysisState.analysis!.learningOutcomeProgress
+                                  .values
                                   .toList()
                                 ..sort((a, b) => b.completedQuestions
                                     .compareTo(a.completedQuestions)))
@@ -404,7 +589,7 @@ class StudentDetailPage extends ConsumerWidget {
             text: 'Sil',
             onPressed: () {
               ref
-                  .read(teacherStudentDetailProvider(studentId).notifier)
+                  .read(teacherStudentDetailProvider(widget.studentId).notifier)
                   .removeStudent(student.id ?? '');
               Navigator.of(context).pop();
               context.pop();
