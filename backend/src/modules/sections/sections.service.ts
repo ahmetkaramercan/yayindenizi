@@ -27,7 +27,7 @@ export class SectionsService {
         book: true,
         tests: {
           include: { _count: { select: { questions: true } } },
-          orderBy: { level: 'asc' },
+          orderBy: [{ level: 'asc' }, { createdAt: 'asc' }],
         },
       },
     });

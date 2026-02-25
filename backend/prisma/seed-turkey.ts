@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 const prisma = new PrismaClient();
-
+// türkiye ilçe verileri
 interface DistrictJson {
   id: number;
   name: string;
