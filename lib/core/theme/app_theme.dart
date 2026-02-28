@@ -22,7 +22,7 @@ class AppTheme {
         onSurface: AppColors.textPrimary,
         onError: AppColors.textOnPrimary,
       ),
-      
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -40,7 +40,7 @@ class AppTheme {
       ),
 
       // Card Theme
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.surface,
         elevation: 2,
         shape: RoundedRectangleBorder(
@@ -109,7 +109,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(8),
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         hintStyle: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
       ),
 
@@ -155,4 +156,3 @@ class AppTheme {
     );
   }
 }
-

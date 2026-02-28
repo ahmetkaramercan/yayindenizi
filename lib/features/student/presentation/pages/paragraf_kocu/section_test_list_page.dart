@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../../../core/widgets/buttons/app_button.dart';
 import '../../../../../../core/widgets/cards/app_card.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
@@ -10,11 +9,19 @@ import '../../../../../core/di/injection_container.dart';
 import '../../../data/repositories/book_repository.dart';
 
 int _extractTestNumber(String title) {
-  final match = RegExp(r'Test\s*(\d+)').firstMatch(title);
-  return match != null ? int.parse(match.group(1)!) : 0;
+  final directMatch = RegExp(r'(?:Test|Deneme)\s*(\d+)', caseSensitive: false)
+      .firstMatch(title);
+  if (directMatch != null) {
+    return int.parse(directMatch.group(1)!);
+  }
+
+  final fallbackMatch = RegExp(r'(\d+)').firstMatch(title);
+  return fallbackMatch != null ? int.parse(fallbackMatch.group(1)!) : 0;
 }
 
-final _sectionTestsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, sectionId) async {
+final _sectionTestsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, sectionId) async {
   final repo = sl<BookRepository>();
   return repo.getSectionTests(sectionId);
 });
@@ -58,7 +65,8 @@ class SectionTestListPage extends ConsumerWidget {
               Text('Testler yüklenemedi', style: AppTextStyles.body1),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => ref.invalidate(_sectionTestsProvider(sectionId)),
+                onPressed: () =>
+                    ref.invalidate(_sectionTestsProvider(sectionId)),
                 child: const Text('Tekrar Dene'),
               ),
             ],
@@ -79,10 +87,35 @@ class SectionTestListPage extends ConsumerWidget {
             padding: const EdgeInsets.all(AppConstants.paddingM),
             itemCount: tests.length + 1 + (isParagrafBook ? 1 : 0),
             itemBuilder: (context, index) {
-              // Seviye Analizim butonu (sadece Paragraf Koçu, test listesinin sonunda)
-              if (isParagrafBook && index == tests.length + 1) {
+              if (index == 0) {
                 return Padding(
-                  padding: const EdgeInsets.only(top: AppConstants.paddingM),
+                  padding: const EdgeInsets.only(bottom: AppConstants.paddingM),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$bookTitle - $sectionTitle',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${tests.length} Test',
+                        style: AppTextStyles.h5.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              // Seviye Analizim butonu (sadece Paragraf Koçu, test listesinin en üstünde)
+              if (isParagrafBook && index == 1) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppConstants.paddingM),
                   child: AppCard(
                     onTap: () {
                       context.push(
@@ -131,33 +164,12 @@ class SectionTestListPage extends ConsumerWidget {
                   ),
                 );
               }
-              if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppConstants.paddingM),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '$bookTitle - $sectionTitle',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '${tests.length} Test',
-                        style: AppTextStyles.h5.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
 
-              final test = tests[index - 1];
-              final questionCount = test['_count']?['questions'] ?? (test['questions'] as List?)?.length ?? 0;
+              final testIndex = index - (isParagrafBook ? 2 : 1);
+              final test = tests[testIndex];
+              final questionCount = test['_count']?['questions'] ??
+                  (test['questions'] as List?)?.length ??
+                  0;
 
               return Card(
                 margin: const EdgeInsets.only(bottom: AppConstants.paddingS),
@@ -178,7 +190,7 @@ class SectionTestListPage extends ConsumerWidget {
                     ),
                     child: Center(
                       child: Text(
-                        '${index}',
+                        '${testIndex + 1}',
                         style: AppTextStyles.h6.copyWith(
                           color: AppColors.primary,
                           fontWeight: FontWeight.bold,
@@ -187,7 +199,7 @@ class SectionTestListPage extends ConsumerWidget {
                     ),
                   ),
                   title: Text(
-                    test['title'] ?? 'Test $index',
+                    test['title'] ?? 'Test ${testIndex + 1}',
                     style: AppTextStyles.body1.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

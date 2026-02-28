@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../widgets/book_card.dart';
+import '../widgets/gunun_bilgisi_dialog.dart';
 import '../providers/student_home_provider.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/providers/invalidate_user_providers.dart';
@@ -95,10 +96,12 @@ class StudentHomePage extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 radius: 26,
-                                backgroundColor: AppColors.textOnPrimary.withOpacity(0.3),
+                                backgroundColor:
+                                    AppColors.textOnPrimary.withOpacity(0.3),
                                 child: Text(
                                   homeState.student?.adSoyad.isNotEmpty == true
-                                      ? homeState.student!.adSoyad[0].toUpperCase()
+                                      ? homeState.student!.adSoyad[0]
+                                          .toUpperCase()
                                       : 'Ö',
                                   style: AppTextStyles.h4.copyWith(
                                     color: AppColors.textOnPrimary,
@@ -114,7 +117,8 @@ class StudentHomePage extends ConsumerWidget {
                                     Text(
                                       'Hoş geldin,',
                                       style: AppTextStyles.body2.copyWith(
-                                        color: AppColors.textOnPrimary.withOpacity(0.8),
+                                        color: AppColors.textOnPrimary
+                                            .withOpacity(0.8),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -130,7 +134,8 @@ class StudentHomePage extends ConsumerWidget {
                                       Text(
                                         homeState.student!.email,
                                         style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.textOnPrimary.withOpacity(0.8),
+                                          color: AppColors.textOnPrimary
+                                              .withOpacity(0.8),
                                         ),
                                       ),
                                     ],
@@ -171,6 +176,16 @@ class StudentHomePage extends ConsumerWidget {
                         context.push('/student/dashboard');
                       },
                       type: AppButtonType.primary,
+                      isFullWidth: true,
+                    ),
+                    const SizedBox(height: AppConstants.paddingM),
+                    AppButton(
+                      text: 'Günün Bilgisi',
+                      icon: Icons.lightbulb_outline,
+                      onPressed: () {
+                        showGununBilgisiDialog(context);
+                      },
+                      type: AppButtonType.outline,
                       isFullWidth: true,
                     ),
                     const SizedBox(height: AppConstants.paddingM),
@@ -243,7 +258,8 @@ class StudentHomePage extends ConsumerWidget {
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           crossAxisSpacing: AppConstants.paddingM,
                           mainAxisSpacing: AppConstants.paddingM,
@@ -256,7 +272,8 @@ class StudentHomePage extends ConsumerWidget {
                             book: book,
                             onTap: () {
                               if (book.hasContent) {
-                                context.push('/student/book-sections', extra: book);
+                                context.push('/student/book-sections',
+                                    extra: book);
                               } else {
                                 _showNoContentDialog(context, book.title);
                               }
@@ -275,4 +292,3 @@ class StudentHomePage extends ConsumerWidget {
     );
   }
 }
-

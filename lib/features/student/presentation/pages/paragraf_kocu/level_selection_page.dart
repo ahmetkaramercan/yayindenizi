@@ -9,7 +9,20 @@ import '../../../domain/entities/book.dart';
 import '../../../../../core/di/injection_container.dart';
 import '../../../data/repositories/book_repository.dart';
 
-final _bookSectionsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, bookId) async {
+int _extractTestNumber(String title) {
+  final directMatch = RegExp(r'(?:Test|Deneme)\s*(\d+)', caseSensitive: false)
+      .firstMatch(title);
+  if (directMatch != null) {
+    return int.parse(directMatch.group(1)!);
+  }
+
+  final fallbackMatch = RegExp(r'(\d+)').firstMatch(title);
+  return fallbackMatch != null ? int.parse(fallbackMatch.group(1)!) : 0;
+}
+
+final _bookSectionsProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, bookId) async {
   final repo = sl<BookRepository>();
   return repo.getBookSections(bookId);
 });
@@ -22,6 +35,7 @@ class LevelSelectionPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sectionsAsync = ref.watch(_bookSectionsProvider(book.id));
+    final isLevelBasedBook = book.category == BookCategory.paragraf;
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +67,17 @@ class LevelSelectionPage extends ConsumerWidget {
             return const Center(child: Text('Henüz bölüm eklenmemiş'));
           }
 
-          sections.sort((a, b) => (a['orderIndex'] as int? ?? 0).compareTo(b['orderIndex'] as int? ?? 0));
+          sections.sort((a, b) => (a['orderIndex'] as int? ?? 0)
+              .compareTo(b['orderIndex'] as int? ?? 0));
+          final allTests = sections
+              .expand((section) => (section['tests'] as List? ?? const []))
+              .cast<Map<String, dynamic>>()
+              .toList();
+          allTests.sort((a, b) {
+            final aNum = _extractTestNumber(a['title'] as String? ?? '');
+            final bNum = _extractTestNumber(b['title'] as String? ?? '');
+            return aNum.compareTo(bNum);
+          });
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppConstants.paddingM),
@@ -105,7 +129,7 @@ class LevelSelectionPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppConstants.paddingL),
                 Text(
-                  'Seviye Seçin',
+                  isLevelBasedBook ? 'Seviye Seçin' : 'Denemeler',
                   style: AppTextStyles.h4.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -113,45 +137,112 @@ class LevelSelectionPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${sections.length} farklı zorluk seviyesinden birini seçerek test çözebilirsiniz',
+                  isLevelBasedBook
+                      ? '${sections.length} farklı zorluk seviyesinden birini seçerek test çözebilirsiniz'
+                      : '${allTests.length} denemeden birini seçerek test çözebilirsiniz',
                   style: AppTextStyles.body2.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingL),
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppConstants.paddingM,
-                    mainAxisSpacing: AppConstants.paddingM,
-                    childAspectRatio: 1.1,
-                  ),
-                  itemCount: sections.length,
-                  itemBuilder: (context, index) {
-                    final section = sections[index];
-                    final testCount = section['_count']?['tests'] ?? (section['tests'] as List?)?.length ?? 0;
+                if (isLevelBasedBook)
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppConstants.paddingM,
+                      mainAxisSpacing: AppConstants.paddingM,
+                      childAspectRatio: 1.1,
+                    ),
+                    itemCount: sections.length,
+                    itemBuilder: (context, index) {
+                      final section = sections[index];
+                      final testCount = section['_count']?['tests'] ??
+                          (section['tests'] as List?)?.length ??
+                          0;
 
-                    return _SectionCard(
-                      index: index,
-                      title: section['title'] ?? 'Bölüm ${index + 1}',
-                      testCount: testCount,
-                      onTap: () {
-                        context.push(
-                          '/student/section-tests',
-                          extra: {
-                            'sectionId': section['id'],
-                            'sectionTitle': section['title'] ?? 'Bölüm ${index + 1}',
-                            'bookTitle': book.title,
-                            'bookId': book.id,
-                            'isParagrafBook': book.category == BookCategory.paragraf,
-                          },
-                        );
-                      },
-                    );
-                  },
-                ),
+                      return _SectionCard(
+                        index: index,
+                        title: section['title'] ?? 'Bölüm ${index + 1}',
+                        testCount: testCount,
+                        isLevelBasedBook: true,
+                        onTap: () {
+                          context.push(
+                            '/student/section-tests',
+                            extra: {
+                              'sectionId': section['id'],
+                              'sectionTitle':
+                                  section['title'] ?? 'Bölüm ${index + 1}',
+                              'bookTitle': book.title,
+                              'bookId': book.id,
+                              'isParagrafBook':
+                                  book.category == BookCategory.paragraf,
+                            },
+                          );
+                        },
+                      );
+                    },
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: allTests.length,
+                    itemBuilder: (context, index) {
+                      final test = allTests[index];
+
+                      return AppCard(
+                        margin: const EdgeInsets.only(
+                          bottom: AppConstants.paddingM,
+                        ),
+                        onTap: () {
+                          context.push(
+                            '/student/paragraf-kocu/test',
+                            extra: test['id'] as String,
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(
+                                  AppConstants.radiusM,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${index + 1}',
+                                  style: AppTextStyles.h6.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppConstants.paddingM),
+                            Expanded(
+                              child: Text(
+                                test['title'] as String? ??
+                                    'Deneme ${index + 1}',
+                                style: AppTextStyles.body1.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
               ],
             ),
           );
@@ -165,18 +256,20 @@ class _SectionCard extends StatelessWidget {
   final int index;
   final String title;
   final int testCount;
+  final bool isLevelBasedBook;
   final VoidCallback onTap;
 
   const _SectionCard({
     required this.index,
     required this.title,
     required this.testCount,
+    required this.isLevelBasedBook,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = _getLevelColor(index);
+    final color = isLevelBasedBook ? _getLevelColor(index) : AppColors.primary;
 
     return AppCard(
       onTap: onTap,
@@ -190,15 +283,21 @@ class _SectionCard extends StatelessWidget {
               color: color.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                '${index + 1}',
-                style: AppTextStyles.h3.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            child: isLevelBasedBook
+                ? Center(
+                    child: Text(
+                      '${index + 1}',
+                      style: AppTextStyles.h3.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    Icons.menu_book_outlined,
+                    color: color,
+                    size: 28,
+                  ),
           ),
           const SizedBox(height: AppConstants.paddingS),
           Text(

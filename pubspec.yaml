@@ -64,4 +64,5 @@ flutter:
   assets:
     - assets/images/books/
     - assets/images/logo/
+    - photos/
 

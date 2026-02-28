@@ -36,7 +36,21 @@ class BookRepository {
   }
 
   Book _bookFromJson(Map<String, dynamic> json) {
-    final imageUrl = json['imageUrl'] as String?;
+    final rawImagePath = json['imageUrl'] as String?;
+    String? assetImage;
+    String? networkImageUrl;
+    if (rawImagePath != null && rawImagePath.isNotEmpty) {
+      if (rawImagePath.startsWith('http://') ||
+          rawImagePath.startsWith('https://')) {
+        networkImageUrl = rawImagePath;
+      } else if (rawImagePath.startsWith('assets/') ||
+          rawImagePath.startsWith('photos/')) {
+        assetImage = rawImagePath;
+      } else {
+        assetImage = 'assets/images/books/$rawImagePath';
+      }
+    }
+
     final sections = json['sections'] as List? ?? [];
     final hasTests = sections.any((s) {
       final count = s['_count']?['tests'] ?? (s['tests'] as List?)?.length ?? 0;
@@ -47,8 +61,8 @@ class BookRepository {
       id: json['id'],
       title: json['title'],
       description: json['description'] ?? '',
-      imageUrl: imageUrl,
-      assetImage: imageUrl != null ? 'assets/images/books/$imageUrl' : null,
+      imageUrl: networkImageUrl,
+      assetImage: assetImage,
       category: _parseCategory(json['category']),
       hasContent: hasTests,
       route: hasTests ? '/student/book-detail' : null,
