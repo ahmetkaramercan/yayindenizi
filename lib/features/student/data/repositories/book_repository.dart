@@ -47,7 +47,7 @@ class BookRepository {
           rawImagePath.startsWith('photos/')) {
         assetImage = rawImagePath;
       } else {
-        assetImage = 'assets/images/books/$rawImagePath';
+        assetImage = 'photos/$rawImagePath';
       }
     }
 
