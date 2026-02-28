@@ -2,9 +2,7 @@ import { PrismaClient, BookCategory } from '@prisma/client';
 
 const prisma = new PrismaClient() as any;
 
-const BOOK_TITLE = 'Dil Bilgisi Denemeleri';
-const LEGACY_BOOK_TITLES = ['Dil Bilgisi Denemeleri Kitabı'];
-const BOOK_IMAGE_URL = 'photos/dil_bilgisi_denemeleri.jpeg';
+const BOOK_TITLE = 'Dil Bilgisi Denemeleri Kitabı';
 
 const LETTER_TO_INDEX: Record<string, number> = {
   A: 0,
@@ -49,23 +47,11 @@ const ANSWER_KEYS: string[][] = [
 ];
 
 async function main() {
-  console.log('Seeding Dil Bilgisi Denemeleri - structure (sections, tests, questions)');
-
-  const deletedEmptyBooks = await prisma.book.deleteMany({
-    where: {
-      AND: [
-        { title: { in: [BOOK_TITLE, ...LEGACY_BOOK_TITLES] } },
-        { sections: { none: {} } },
-      ],
-    },
-  });
-  if (deletedEmptyBooks.count > 0) {
-    console.log(`✓ Removed ${deletedEmptyBooks.count} empty legacy book record(s)`);
-  }
+  console.log('Seeding Dil Bilgisi Denemeleri Kitabı - structure (sections, tests, questions)');
 
   let book = await prisma.book.findFirst({
-    where: { title: { in: [BOOK_TITLE, ...LEGACY_BOOK_TITLES] } },
-    select: { id: true, title: true },
+    where: { title: BOOK_TITLE },
+    select: { id: true },
   });
 
   if (!book) {
@@ -73,22 +59,12 @@ async function main() {
       data: {
         title: BOOK_TITLE,
         description: 'TYT Dil Bilgisi deneme kitabı - 30 deneme, her denemede 13 soru',
-        imageUrl: BOOK_IMAGE_URL,
         category: BookCategory.DENEME,
       },
-      select: { id: true, title: true },
+      select: { id: true },
     });
     console.log(`✓ Book created: ${book.id}`);
   } else {
-    await prisma.book.update({
-      where: { id: book.id },
-      data: {
-        title: BOOK_TITLE,
-        description: 'TYT Dil Bilgisi deneme kitabı - 30 deneme, her denemede 13 soru',
-        imageUrl: BOOK_IMAGE_URL,
-        category: BookCategory.DENEME,
-      },
-    });
     console.log(`✓ Book found: ${book.id}`);
   }
 
