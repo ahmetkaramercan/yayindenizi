@@ -20,7 +20,6 @@ export interface AuthResponse {
     email: string;
     role: Role;
     adSoyad: string;
-    ogretmenKodu?: string | null;
   };
 }
 
@@ -68,17 +67,11 @@ export class AuthService {
   async registerTeacher(dto: CreateTeacherDto): Promise<AuthResponse> {
     const user = await this.usersService.createTeacher(dto);
     const tokens = await this.generateTokenPair(user.id, user.email, user.role);
-    this.logger.log(`Teacher registered: ${user.email} (code: ${user.ogretmenKodu})`);
+    this.logger.log(`Teacher registered: ${user.email}`);
 
     return {
       ...tokens,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        adSoyad: user.adSoyad,
-        ogretmenKodu: user.ogretmenKodu,
-      },
+      user: { id: user.id, email: user.email, role: user.role, adSoyad: user.adSoyad },
     };
   }
 

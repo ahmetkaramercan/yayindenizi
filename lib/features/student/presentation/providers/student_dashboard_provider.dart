@@ -1,26 +1,26 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../teacher/domain/entities/teacher.dart';
+import '../../../teacher/domain/entities/classroom.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../teacher/data/repositories/relation_repository.dart';
+import '../../../teacher/data/repositories/classroom_repository.dart';
 
 class StudentDashboardState {
-  final List<Teacher> teachers;
+  final List<Classroom> classrooms;
   final bool isLoading;
   final String? error;
 
   StudentDashboardState({
-    this.teachers = const [],
+    this.classrooms = const [],
     this.isLoading = false,
     this.error,
   });
 
   StudentDashboardState copyWith({
-    List<Teacher>? teachers,
+    List<Classroom>? classrooms,
     bool? isLoading,
     String? error,
   }) {
     return StudentDashboardState(
-      teachers: teachers ?? this.teachers,
+      classrooms: classrooms ?? this.classrooms,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -29,37 +29,27 @@ class StudentDashboardState {
 
 class StudentDashboardNotifier extends StateNotifier<StudentDashboardState> {
   StudentDashboardNotifier() : super(StudentDashboardState()) {
-    loadTeachers();
+    loadClassrooms();
   }
 
-  final _relationRepo = sl<RelationRepository>();
+  final _classroomRepo = sl<ClassroomRepository>();
 
-  Future<void> loadTeachers() async {
+  Future<void> loadClassrooms() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final teachers = await _relationRepo.getMyTeachers();
-
-      state = state.copyWith(
-        teachers: teachers,
-        isLoading: false,
-      );
+      final classrooms = await _classroomRepo.getStudentClassrooms();
+      state = state.copyWith(classrooms: classrooms, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> removeTeacher(String teacherId) async {
+  Future<void> leaveClassroom(String classroomId) async {
     try {
-      await _relationRepo.removeTeacher(teacherId);
-
-      final updatedTeachers =
-          state.teachers.where((t) => t.id != teacherId).toList();
-
-      state = state.copyWith(teachers: updatedTeachers);
+      await _classroomRepo.leaveClassroom(classroomId);
+      final updated = state.classrooms.where((c) => c.id != classroomId).toList();
+      state = state.copyWith(classrooms: updated);
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }

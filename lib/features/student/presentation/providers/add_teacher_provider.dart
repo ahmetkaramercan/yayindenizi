@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../../teacher/data/repositories/relation_repository.dart';
+import '../../../teacher/data/repositories/classroom_repository.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 
 class AddTeacherState {
@@ -30,29 +30,26 @@ class AddTeacherState {
 class AddTeacherNotifier extends StateNotifier<AddTeacherState> {
   AddTeacherNotifier() : super(AddTeacherState());
 
-  final _relationRepo = sl<RelationRepository>();
+  final _classroomRepo = sl<ClassroomRepository>();
 
-  Future<void> addTeacher(String teacherCode) async {
+  Future<void> addTeacher(String classroomCode) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
     try {
-      final code = teacherCode.trim().toUpperCase();
+      final code = classroomCode.trim().toUpperCase();
 
       if (code.isEmpty) {
         state = state.copyWith(
           isLoading: false,
-          error: 'Öğretmen kodu boş bırakılamaz',
+          error: 'Sınıf kodu boş bırakılamaz',
           isSuccess: false,
         );
         return;
       }
 
-      await _relationRepo.addTeacher(code);
+      await _classroomRepo.joinClassroom(code);
 
-      state = state.copyWith(
-        isLoading: false,
-        isSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, isSuccess: true);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

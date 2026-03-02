@@ -20,7 +20,7 @@ const SECTION_OUTCOME_MAP: Record<string, string> = {
   'Paragrafta Yapı':                       'TR.10',
   'Paragrafta Anlam':                      'TR.11',
   'Zincir Soru':                           'TR.12',
-  'Paragraf Karma Sorular':                                              'TR.13',
+  // 'Paragraf Karma Sorular' → soru bazlı kazanımlar KARMA_MAPPINGS'te tanımlı
   'Cümlede Anlam ve Anlatım Karma Test':                                'TR.14',
   // === SES VE YAZI ===
   'Ses Bilgisi':                                                         'TR.15',
@@ -58,8 +58,88 @@ const SECTION_OUTCOME_MAP: Record<string, string> = {
 // { sectionTitle, testTitle, questionNo, code }
 // Karma testler verildikçe buraya eklenecek.
 const KARMA_MAPPINGS: { sectionTitle: string; testTitle: string; questionNo: number; code: string }[] = [
-  // Örnek format (karma testler geldiğinde doldurun):
-  // { sectionTitle: 'Karma Testler', testTitle: 'Test 1', questionNo: 1, code: 'TR.1' },
+  // === PARAGRAF KARMA SORULAR - Test 1 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 2, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 3, code: 'TR.41' }, // Diyalogda boş bırakılan yer
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 4, code: 'TR.42' }, // Paragrafta yorum
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 5, code: 'TR.9'  }, // Paragrafta Anlatım
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 6, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 1', questionNo: 7, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  // === PARAGRAF KARMA SORULAR - Test 2 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 2, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 3, code: 'TR.44' }, // Paragrafı ikiye bölme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 4, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 5, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 6, code: 'TR.45' }, // Paragrafın konusu
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 7, code: 'TR.46' }, // Boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 2', questionNo: 8, code: 'TR.47' }, // Paragraf oluşturma
+  // === PARAGRAF KARMA SORULAR - Test 3 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 1, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 2, code: 'TR.9'  }, // Paragrafta Anlatım
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 3, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 4, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 5, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 6, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 7, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 3', questionNo: 8, code: 'TR.48' }, // Paragrafa cümle ekleme
+  // === PARAGRAF KARMA SORULAR - Test 4 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 2, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 3, code: 'TR.9'  }, // Paragrafta Anlatım
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 4, code: 'TR.44' }, // Paragrafı ikiye bölme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 5, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 6, code: 'TR.46' }, // Boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 7, code: 'TR.47' }, // Paragraf oluşturma
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 4', questionNo: 8, code: 'TR.39' }, // Yardımcı düşünce
+  // === PARAGRAF KARMA SORULAR - Test 5 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 2, code: 'TR.47' }, // Paragraf oluşturma
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 3, code: 'TR.44' }, // Paragrafı ikiye bölme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 4, code: 'TR.46' }, // Boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 5, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 5', questionNo: 6, code: 'TR.40' }, // Ana düşünce
+  // === PARAGRAF KARMA SORULAR - Test 6 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 2, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 3, code: 'TR.45' }, // Paragrafın konusu
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 4, code: 'TR.9'  }, // Paragrafta Anlatım
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 5, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 6, code: 'TR.48' }, // Paragrafa cümle ekleme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 6', questionNo: 7, code: 'TR.40' }, // Ana düşünce
+  // === PARAGRAF KARMA SORULAR - Test 7 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 1, code: 'TR.44' }, // Paragrafı ikiye bölme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 2, code: 'TR.48' }, // Paragrafa cümle ekleme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 3, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 4, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 5, code: 'TR.41' }, // Diyalogda boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 6, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 7', questionNo: 7, code: 'TR.39' }, // Yardımcı düşünce
+  // === PARAGRAF KARMA SORULAR - Test 8 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 1, code: 'TR.46' }, // Paragrafta boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 2, code: 'TR.46' }, // Paragrafta boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 3, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 4, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 5, code: 'TR.49' }, // Paragraf cümlesinin anlamını belirleme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 6, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 8', questionNo: 7, code: 'TR.9'  }, // Paragrafta anlatım
+  // === PARAGRAF KARMA SORULAR - Test 9 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 1, code: 'TR.47' }, // Paragraf oluşturma
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 2, code: 'TR.46' }, // Paragrafta boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 3, code: 'TR.43' }, // Düşüncenin akışını bozan cümle
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 4, code: 'TR.44' }, // Paragrafı ikiye bölme
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 5, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 6, code: 'TR.50' }, // Soruya cevap paragraf
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 7, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 9', questionNo: 8, code: 'TR.39' }, // Yardımcı düşünce
+  // === PARAGRAF KARMA SORULAR - Test 10 ===
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 1, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 2, code: 'TR.39' }, // Yardımcı düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 3, code: 'TR.46' }, // Boş bırakılan yeri tamamlama
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 4, code: 'TR.9'  }, // Paragrafta Anlatım
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 5, code: 'TR.40' }, // Ana düşünce
+  { sectionTitle: 'Paragraf Karma Sorular', testTitle: 'Test 10', questionNo: 6, code: 'TR.9'  }, // Paragrafta Anlatım
 ];
 
 async function main() {

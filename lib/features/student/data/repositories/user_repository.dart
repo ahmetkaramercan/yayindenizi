@@ -32,7 +32,6 @@ class UserRepository {
       id: map['id'],
       adSoyad: map['adSoyad'] ?? '',
       email: map['email'] ?? '',
-      ogretmenKodu: map['ogretmenKodu'] ?? '',
       okul: map['okul'],
       cityId: map['cityId'],
       districtId: map['districtId'],

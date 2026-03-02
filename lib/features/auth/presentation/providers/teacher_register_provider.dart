@@ -6,26 +6,22 @@ class TeacherRegisterState {
   final bool isLoading;
   final String? error;
   final bool isSuccess;
-  final String? ogretmenKodu;
 
   TeacherRegisterState({
     this.isLoading = false,
     this.error,
     this.isSuccess = false,
-    this.ogretmenKodu,
   });
 
   TeacherRegisterState copyWith({
     bool? isLoading,
     String? error,
     bool? isSuccess,
-    String? ogretmenKodu,
   }) {
     return TeacherRegisterState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
       isSuccess: isSuccess ?? this.isSuccess,
-      ogretmenKodu: ogretmenKodu ?? this.ogretmenKodu,
     );
   }
 }
@@ -46,7 +42,7 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 
     try {
-      final response = await _authRepo.registerTeacher(
+      await _authRepo.registerTeacher(
         email: email,
         password: password,
         adSoyad: adSoyad,
@@ -55,11 +51,7 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
         okul: okul ?? '',
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        isSuccess: true,
-        ogretmenKodu: response.ogretmenKodu,
-      );
+      state = state.copyWith(isLoading: false, isSuccess: true);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

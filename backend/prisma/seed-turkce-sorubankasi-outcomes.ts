@@ -55,7 +55,19 @@ const OUTCOMES: { code: string; name: string; category: string }[] = [
   // === ANLATIM BOZUKLUKLARI ===
   { code: 'TR.37', name: 'Anlama Dayalı Anlatım Bozuklukları',                           category: 'Anlatım Bozuklukları' },
   { code: 'TR.38', name: 'Dil Bilgisi Dayalı Anlatım Bozuklukları',                      category: 'Anlatım Bozuklukları' },
-  // Buraya yeni konular eklenecek (veriler geldikçe)
+  // === PARAGRAF KARMA SORULAR — soru bazlı kazanımlar ===
+  { code: 'TR.39', name: 'Yardımcı Düşünce',                          category: 'Paragraf' },
+  { code: 'TR.40', name: 'Ana Düşünce',                               category: 'Paragraf' },
+  { code: 'TR.41', name: 'Diyalogda Boş Bırakılan Yeri Tamamlama',   category: 'Paragraf' },
+  { code: 'TR.42', name: 'Paragrafta Yorum',                          category: 'Paragraf' },
+  { code: 'TR.43', name: 'Düşüncenin Akışını Bozan Cümle',           category: 'Paragraf' },
+  { code: 'TR.44', name: 'Paragrafı İkiye Bölme',                    category: 'Paragraf' },
+  { code: 'TR.45', name: 'Paragrafın Konusu',                         category: 'Paragraf' },
+  { code: 'TR.46', name: 'Boş Bırakılan Yeri Tamamlama',             category: 'Paragraf' },
+  { code: 'TR.47', name: 'Paragraf Oluşturma',                        category: 'Paragraf' },
+  { code: 'TR.48', name: 'Paragrafa Cümle Ekleme',                   category: 'Paragraf' },
+  { code: 'TR.49', name: 'Paragraf Cümlesinin Anlamını Belirleme',   category: 'Paragraf' },
+  { code: 'TR.50', name: 'Soruya Cevap Paragraf',                    category: 'Paragraf' },
 ];
 
 async function main() {

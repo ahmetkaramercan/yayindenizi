@@ -1,6 +1,6 @@
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-export function generateTeacherCode(length = 8): string {
+export function generateCode(length = 8): string {
   let code = '';
   const bytes = new Uint8Array(length);
   crypto.getRandomValues(bytes);

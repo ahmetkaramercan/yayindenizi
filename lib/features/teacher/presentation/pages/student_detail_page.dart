@@ -17,10 +17,12 @@ import '../../../student/data/repositories/book_repository.dart';
 
 class StudentDetailPage extends ConsumerStatefulWidget {
   final String studentId;
+  final String classroomId;
 
   const StudentDetailPage({
     super.key,
     required this.studentId,
+    required this.classroomId,
   });
 
   @override
@@ -45,7 +47,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final detailState = ref.watch(teacherStudentDetailProvider(widget.studentId));
+    final detailState = ref.watch(teacherStudentDetailProvider((widget.classroomId, widget.studentId)));
     final analysisState = ref.watch(teacherStudentAnalysisProvider);
 
     return Scaffold(
@@ -63,7 +65,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref
-              .read(teacherStudentDetailProvider(widget.studentId).notifier)
+              .read(teacherStudentDetailProvider((widget.classroomId, widget.studentId)).notifier)
               .loadData();
           if (_selectedBookId != null) {
             ref
@@ -589,8 +591,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
             text: 'Sil',
             onPressed: () {
               ref
-                  .read(teacherStudentDetailProvider(widget.studentId).notifier)
-                  .removeStudent(student.id ?? '');
+                  .read(teacherStudentDetailProvider((widget.classroomId, widget.studentId)).notifier)
+                  .removeStudent();
               Navigator.of(context).pop();
               context.pop();
             },

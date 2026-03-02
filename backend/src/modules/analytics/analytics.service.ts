@@ -34,10 +34,10 @@ export class AnalyticsService {
   // ─── Helpers ────────────────────────────────────────────────────────────
 
   async verifyTeacherAccess(teacherId: string, studentId: string) {
-    const relation = await this.prisma.teacherStudent.findUnique({
-      where: { teacherId_studentId: { teacherId, studentId } },
+    const membership = await this.prisma.classroomStudent.findFirst({
+      where: { studentId, classroom: { teacherId } },
     });
-    if (!relation) {
+    if (!membership) {
       throw new ForbiddenException('Bu öğrenci sizinle bağlantılı değil');
     }
   }
@@ -257,7 +257,6 @@ export class AnalyticsService {
     bookId?: string,
   ): Promise<SectionStat[]> {
     const stats = await this.getStudentSectionStats(userId, bookId);
-    return stats.filter((s) => s.accuracy < threshold);
     return stats.filter((s) => s.accuracy < threshold);
   }
 

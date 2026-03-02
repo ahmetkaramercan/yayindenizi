@@ -9,7 +9,6 @@ import { Role, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CitiesService } from '@/modules/cities/cities.service';
-import { generateTeacherCode } from '@/common/utils/generate-code';
 import {
   CreateStudentDto,
   CreateTeacherDto,
@@ -21,7 +20,6 @@ import {
 } from './dto';
 
 const BCRYPT_ROUNDS = 10;
-const TEACHER_CODE_MAX_RETRIES = 5;
 
 const USER_SAFE_SELECT = {
   id: true,
@@ -33,7 +31,6 @@ const USER_SAFE_SELECT = {
   city: { select: { id: true, name: true } },
   district: { select: { id: true, name: true } },
   okul: true,
-  ogretmenKodu: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -74,7 +71,6 @@ export class UsersService {
     await this.ensureEmailAvailable(dto.email);
     await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
-    const ogretmenKodu = await this.generateUniqueTeacherCode();
 
     const user = await this.prisma.user.create({
       data: {
@@ -85,12 +81,11 @@ export class UsersService {
         cityId: dto.cityId,
         districtId: dto.districtId,
         okul: dto.okul,
-        ogretmenKodu,
       },
       select: USER_SAFE_SELECT,
     });
 
-    this.logger.log(`Teacher created: ${user.id} (code: ${ogretmenKodu})`);
+    this.logger.log(`Teacher created: ${user.id}`);
     return user;
   }
 
@@ -146,11 +141,11 @@ export class UsersService {
       where: { id },
       select: {
         ...USER_SAFE_SELECT,
-        teacherOf: {
-          include: { student: { select: { id: true, adSoyad: true, email: true } } },
+        classrooms: {
+          select: { id: true, name: true, code: true, _count: { select: { students: true } } },
         },
-        studentOf: {
-          include: { teacher: { select: { id: true, adSoyad: true, ogretmenKodu: true } } },
+        classroomStudents: {
+          include: { classroom: { select: { id: true, name: true, code: true, teacher: { select: { id: true, adSoyad: true } } } } },
         },
       },
     });
@@ -204,8 +199,12 @@ export class UsersService {
       where: { id: userId, role: Role.STUDENT },
       select: {
         ...USER_SAFE_SELECT,
-        studentOf: {
-          include: { teacher: { select: { id: true, adSoyad: true, ogretmenKodu: true } } },
+        classroomStudents: {
+          include: {
+            classroom: {
+              select: { id: true, name: true, code: true, teacher: { select: { id: true, adSoyad: true, okul: true } } },
+            },
+          },
         },
       },
     });
@@ -231,8 +230,8 @@ export class UsersService {
       where: { id: userId, role: Role.TEACHER },
       select: {
         ...USER_SAFE_SELECT,
-        teacherOf: {
-          include: { student: { select: { id: true, adSoyad: true, email: true } } },
+        classrooms: {
+          select: { id: true, name: true, code: true, _count: { select: { students: true } } },
         },
       },
     });
@@ -258,20 +257,5 @@ export class UsersService {
     if (existing) {
       throw new ConflictException('Bu e-posta adresi zaten kayıtlı');
     }
-  }
-
-  /**
-   * Generates a unique 8-char teacher code, retrying on collision.
-   */
-  private async generateUniqueTeacherCode(): Promise<string> {
-    for (let attempt = 0; attempt < TEACHER_CODE_MAX_RETRIES; attempt++) {
-      const code = generateTeacherCode(8);
-      const existing = await this.prisma.user.findUnique({
-        where: { ogretmenKodu: code },
-      });
-      if (!existing) return code;
-      this.logger.warn(`Teacher code collision on attempt ${attempt + 1}: ${code}`);
-    }
-    throw new ConflictException('Failed to generate unique teacher code, please try again');
   }
 }

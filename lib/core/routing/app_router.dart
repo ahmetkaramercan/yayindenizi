@@ -25,6 +25,7 @@ import '../../features/student/presentation/pages/konu_kitaplari/topic_analysis_
 import '../../features/teacher/presentation/pages/teacher_dashboard_page.dart';
 import '../../features/teacher/presentation/pages/student_analysis_page.dart';
 import '../../features/teacher/presentation/pages/student_detail_page.dart';
+import '../../features/teacher/presentation/pages/classroom_detail_page.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/login',
@@ -193,11 +194,21 @@ final appRouter = GoRouter(
       builder: (context, state) => const TeacherStudentAnalysisPage(),
     ),
     GoRoute(
+      path: '/teacher/classroom/:classroomId',
+      name: 'classroom-detail',
+      builder: (context, state) => ClassroomDetailPage(
+        classroomId: state.pathParameters['classroomId']!,
+      ),
+    ),
+    GoRoute(
       path: '/teacher/student-detail',
       name: 'teacher-student-detail',
       builder: (context, state) {
-        final studentId = state.extra as String? ?? '';
-        return StudentDetailPage(studentId: studentId);
+        final extra = state.extra as Map<String, dynamic>;
+        return StudentDetailPage(
+          studentId: extra['studentId'] as String,
+          classroomId: extra['classroomId'] as String,
+        );
       },
     ),
     GoRoute(

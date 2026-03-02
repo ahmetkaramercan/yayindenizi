@@ -18,11 +18,6 @@ async function main() {
     },
   });
 
-  // Istanbul cityId=40, Kadıköy districtId=470, Beşiktaş districtId=457 (from Turkey.json)
-  const istanbulCityId = '40';
-  const kadikoyDistrictId = '470';
-  const besiktasDistrictId = '457';
-
   // Teacher
   const teacher = await prisma.user.upsert({
     where: { email: 'ogretmen@yayindenizi.com' },
@@ -32,10 +27,7 @@ async function main() {
       password: hashedPassword,
       role: Role.TEACHER,
       adSoyad: 'Ahmet Yılmaz',
-      cityId: istanbulCityId,
-      districtId: kadikoyDistrictId,
       okul: 'Atatürk Anadolu Lisesi',
-      ogretmenKodu: 'OGR001',
     },
   });
 
@@ -48,16 +40,19 @@ async function main() {
       password: hashedPassword,
       role: Role.STUDENT,
       adSoyad: 'Elif Demir',
-      cityId: istanbulCityId,
-      districtId: besiktasDistrictId,
     },
   });
 
-  // Teacher-Student relation
-  await prisma.teacherStudent.upsert({
-    where: { teacherId_studentId: { teacherId: teacher.id, studentId: student.id } },
-    update: {},
-    create: { teacherId: teacher.id, studentId: student.id },
+  // Create a classroom for the teacher and add the student
+  const classroom = await prisma.classroom.create({
+    data: {
+      name: '9-A Türkçe',
+      code: 'ABCD1234',
+      teacherId: teacher.id,
+      students: {
+        create: { studentId: student.id },
+      },
+    },
   });
 
   // Learning outcomes (generic seed codes)
@@ -125,6 +120,7 @@ async function main() {
     admin: admin.id,
     teacher: teacher.id,
     student: student.id,
+    classroom: classroom.id,
     book: book.id,
   });
 }

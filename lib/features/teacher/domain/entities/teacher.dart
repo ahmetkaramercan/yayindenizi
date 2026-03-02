@@ -10,7 +10,6 @@ class Teacher extends Equatable {
   final String? cityName;
   final String? districtName;
   final String? okul;
-  final String ogretmenKodu; // Unique
 
   const Teacher({
     this.id,
@@ -22,7 +21,6 @@ class Teacher extends Equatable {
     this.cityName,
     this.districtName,
     this.okul,
-    required this.ogretmenKodu,
   });
 
   /// Display string for location (e.g. "İstanbul, Kadıköy")
@@ -47,7 +45,6 @@ class Teacher extends Equatable {
         cityName,
         districtName,
         okul,
-        ogretmenKodu,
       ];
 
   Teacher copyWith({
@@ -60,7 +57,6 @@ class Teacher extends Equatable {
     String? cityName,
     String? districtName,
     String? okul,
-    String? ogretmenKodu,
   }) {
     return Teacher(
       id: id ?? this.id,
@@ -72,9 +68,6 @@ class Teacher extends Equatable {
       cityName: cityName ?? this.cityName,
       districtName: districtName ?? this.districtName,
       okul: okul ?? this.okul,
-      ogretmenKodu: ogretmenKodu ?? this.ogretmenKodu,
     );
   }
 }
-
-

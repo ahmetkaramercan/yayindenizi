@@ -4,9 +4,9 @@ import '../../../student/domain/entities/student_analysis.dart';
 import '../../../student/domain/entities/test_history.dart';
 import '../../../student/domain/entities/learning_outcome.dart';
 import '../../../../core/di/injection_container.dart';
-import '../../data/repositories/relation_repository.dart';
+import '../../data/repositories/classroom_repository.dart';
 import '../../../student/data/repositories/analytics_repository.dart';
-import 'teacher_dashboard_provider.dart';
+import 'classroom_detail_provider.dart';
 
 class TeacherStudentDetailState {
   final Student? student;
@@ -42,22 +42,24 @@ class TeacherStudentDetailState {
 
 class TeacherStudentDetailNotifier
     extends StateNotifier<TeacherStudentDetailState> {
+  final String classroomId;
   final String studentId;
   final Ref ref;
 
-  TeacherStudentDetailNotifier(this.studentId, this.ref)
+  TeacherStudentDetailNotifier(this.classroomId, this.studentId, this.ref)
       : super(TeacherStudentDetailState()) {
     loadData();
   }
 
-  final _relationRepo = sl<RelationRepository>();
+  final _classroomRepo = sl<ClassroomRepository>();
   final _analyticsRepo = sl<AnalyticsRepository>();
 
   Future<void> loadData() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final detailData = await _relationRepo.getStudentDetail(studentId);
+      final detailData =
+          await _classroomRepo.getStudentInClassroom(classroomId, studentId);
 
       final studentJson = detailData['student'] as Map<String, dynamic>? ?? detailData;
       final city = studentJson['city'] as Map<String, dynamic>?;
@@ -72,7 +74,7 @@ class TeacherStudentDetailNotifier
         districtName: district?['name'],
       );
 
-      // Try to load analytics (getStudentFull = kazanım verileri dahil)
+      // Try to load analytics
       StudentAnalysis? analysis;
       try {
         final analyticsData = await _analyticsRepo.getStudentFull(studentId);
@@ -125,7 +127,7 @@ class TeacherStudentDetailNotifier
         // Analytics might not be available yet
       }
 
-      // Try to load test history
+      // Load test history
       final results = detailData['results'] as List? ?? [];
       final testHistory = results.map((r) {
         final json = r as Map<String, dynamic>;
@@ -159,17 +161,14 @@ class TeacherStudentDetailNotifier
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> removeStudent(String studentId) async {
+  Future<void> removeStudent() async {
     try {
-      await _relationRepo.removeStudent(studentId);
-      ref.read(teacherDashboardProvider.notifier).removeStudent(studentId);
+      await _classroomRepo.removeStudentFromClassroom(classroomId, studentId);
+      ref.read(classroomDetailProvider(classroomId).notifier).removeStudent(studentId);
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
@@ -182,8 +181,9 @@ class TeacherStudentDetailNotifier
   }
 }
 
+// Key is a record of (classroomId, studentId)
 final teacherStudentDetailProvider =
     StateNotifierProvider.family<TeacherStudentDetailNotifier,
-        TeacherStudentDetailState, String>((ref, studentId) {
-  return TeacherStudentDetailNotifier(studentId, ref);
+        TeacherStudentDetailState, (String, String)>((ref, key) {
+  return TeacherStudentDetailNotifier(key.$1, key.$2, ref);
 });

@@ -47,20 +47,23 @@ model District {
 // ─── User ───────────────────────────────────────────────────────────────────
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  password     String
-  role         Role
-  adSoyad      String   @map("ad_soyad")
-  cityId       String?  @map("city_id")
-  districtId   String?  @map("district_id")
-  okul         String?
-  ogretmenKodu String?  @unique @map("ogretmen_kodu")
+  id         String   @id @default(uuid())
+  email      String   @unique
+  password   String
+  role       Role
+  adSoyad    String   @map("ad_soyad")
+  cityId     String?  @map("city_id")
+  districtId String?  @map("district_id")
+  okul       String?
 
-  city         City?    @relation(fields: [cityId], references: [id], onDelete: SetNull)
-  district     District? @relation(fields: [districtId], references: [id], onDelete: SetNull)
-  teacherOf        TeacherStudent[]  @relation("TeacherRelation")
-  studentOf        TeacherStudent[]  @relation("StudentRelation")
+  city     City?     @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  district District? @relation(fields: [districtId], references: [id], onDelete: SetNull)
+
+  // Teacher owns classrooms
+  classrooms        Classroom[]
+  // Student belongs to classrooms
+  classroomStudents ClassroomStudent[]
+
   results          Result[]
   analytics        Analytics[]
   outcomeAnalytics OutcomeAnalytics[]
@@ -75,21 +78,39 @@ model User {
   @@map("users")
 }
 
-// ─── TeacherStudent ─────────────────────────────────────────────────────────
+// ─── Classroom ───────────────────────────────────────────────────────────────
 
-model TeacherStudent {
-  id        String   @id @default(uuid())
-  teacherId String   @map("teacher_id")
-  studentId String   @map("student_id")
+model Classroom {
+  id        String @id @default(uuid())
+  name      String
+  code      String @unique
+  teacherId String @map("teacher_id")
 
-  teacher User @relation("TeacherRelation", fields: [teacherId], references: [id], onDelete: Cascade)
-  student User @relation("StudentRelation", fields: [studentId], references: [id], onDelete: Cascade)
+  teacher  User               @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  students ClassroomStudent[]
 
   createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  @@unique([teacherId, studentId])
+  @@index([teacherId])
+  @@map("classrooms")
+}
+
+// ─── ClassroomStudent ────────────────────────────────────────────────────────
+
+model ClassroomStudent {
+  id          String @id @default(uuid())
+  classroomId String @map("classroom_id")
+  studentId   String @map("student_id")
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  @@unique([classroomId, studentId])
   @@index([studentId])
-  @@map("teacher_students")
+  @@map("classroom_students")
 }
 
 // ─── Book ───────────────────────────────────────────────────────────────────

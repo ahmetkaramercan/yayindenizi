@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
@@ -8,7 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../teacher/domain/entities/teacher.dart';
+import '../../../teacher/domain/entities/classroom.dart';
 import '../providers/student_dashboard_provider.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/providers/invalidate_user_providers.dart';
@@ -24,56 +25,46 @@ class StudentDashboardPage extends ConsumerStatefulWidget {
 }
 
 class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
-  final _teacherCodeController = TextEditingController();
-  bool _showAddTeacherDialog = false;
+  final _classroomCodeController = TextEditingController();
 
   @override
   void dispose() {
-    _teacherCodeController.dispose();
+    _classroomCodeController.dispose();
     super.dispose();
   }
 
-  void _showAddTeacherDialogFunc() {
-    setState(() {
-      _showAddTeacherDialog = true;
-    });
+  void _showJoinClassroomDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Öğretmen Ekle'),
+        title: const Text('Sınıfa Katıl'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AppTextField(
-              label: 'Öğretmen Kodu',
-              hint: 'TCH123456',
-              controller: _teacherCodeController,
-              prefixIcon: const Icon(Icons.badge_outlined),
+              label: 'Sınıf Kodu',
+              hint: 'AB3X7KP2',
+              controller: _classroomCodeController,
+              prefixIcon: const Icon(Icons.class_outlined),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () {
-              setState(() {
-                _showAddTeacherDialog = false;
-              });
-              _teacherCodeController.clear();
+              _classroomCodeController.clear();
               Navigator.of(context).pop();
             },
             child: const Text('İptal'),
           ),
           AppButton(
-            text: 'Ekle',
+            text: 'Katıl',
             onPressed: () {
-              final code = _teacherCodeController.text.trim();
+              final code = _classroomCodeController.text.trim().toUpperCase();
               if (code.isNotEmpty) {
                 ref.read(addTeacherProvider.notifier).addTeacher(code);
-                _teacherCodeController.clear();
+                _classroomCodeController.clear();
                 Navigator.of(context).pop();
-                setState(() {
-                  _showAddTeacherDialog = false;
-                });
               }
             },
             type: AppButtonType.primary,
@@ -81,32 +72,29 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
         ],
       ),
     ).then((_) {
-      setState(() {
-        _showAddTeacherDialog = false;
-      });
-      _teacherCodeController.clear();
+      _classroomCodeController.clear();
     });
   }
 
-  void _showRemoveTeacherDialog(
-      BuildContext context, WidgetRef ref, Teacher teacher) {
+  void _showLeaveClassroomDialog(
+      BuildContext context, WidgetRef ref, Classroom classroom) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Öğretmeni Kaldır'),
+        title: const Text('Sınıftan Ayrıl'),
         content: Text(
-            '${teacher.adSoyad} adlı öğretmeni listeden çıkarmak istediğinize emin misiniz?'),
+            '${classroom.name} sınıfından ayrılmak istediğinize emin misiniz?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: const Text('İptal'),
           ),
           AppButton(
-            text: 'Kaldır',
+            text: 'Ayrıl',
             onPressed: () {
               ref
                   .read(studentDashboardProvider.notifier)
-                  .removeTeacher(teacher.id ?? '');
+                  .leaveClassroom(classroom.id);
               Navigator.of(context).pop();
             },
             type: AppButtonType.danger,
@@ -121,15 +109,15 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
     final dashboardState = ref.watch(studentDashboardProvider);
     final addTeacherState = ref.watch(addTeacherProvider);
 
-    // Başarılı öğretmen ekleme mesajı
+    // Başarılı sınıfa katılma mesajı
     if (addTeacherState.isSuccess) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         context.showSnackBar(
-          'Öğretmen başarıyla eklendi!',
+          'Sınıfa başarıyla katıldınız!',
           backgroundColor: AppColors.success,
         );
         ref.read(addTeacherProvider.notifier).reset();
-        ref.read(studentDashboardProvider.notifier).loadTeachers();
+        ref.read(studentDashboardProvider.notifier).loadClassrooms();
       });
     }
 
@@ -162,7 +150,7 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.read(studentDashboardProvider.notifier).loadTeachers();
+          ref.read(studentDashboardProvider.notifier).loadClassrooms();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -170,18 +158,18 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Öğretmen Ekle Butonu
+              // Sınıfa Katıl Butonu
               AppButton(
-                text: 'Öğretmen Ekle',
-                icon: Icons.person_add,
-                onPressed: _showAddTeacherDialogFunc,
+                text: 'Sınıfa Katıl',
+                icon: Icons.add_circle_outline,
+                onPressed: _showJoinClassroomDialog,
                 isFullWidth: true,
                 type: AppButtonType.primary,
               ),
               const SizedBox(height: AppConstants.paddingL),
-              // Bağlı Öğretmenler Listesi
+              // Sınıflarım Listesi
               Text(
-                'Bağlı Öğretmenlerim',
+                'Sınıflarım',
                 style: AppTextStyles.h5.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.bold,
@@ -215,18 +203,18 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
                     ],
                   ),
                 )
-              else if (dashboardState.teachers.isEmpty)
+              else if (dashboardState.classrooms.isEmpty)
                 AppCard(
                   child: Column(
                     children: [
                       Icon(
-                        Icons.person_off_outlined,
+                        Icons.class_outlined,
                         color: AppColors.textSecondary,
                         size: 48,
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Henüz bağlı öğretmeniniz yok',
+                        'Henüz bir sınıfa katılmadınız',
                         style: AppTextStyles.body1.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -234,7 +222,7 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Öğretmen eklemek için yukarıdaki butona tıklayın',
+                        'Sınıf kodunuzu girerek sınıfa katılabilirsiniz',
                         style: AppTextStyles.body2.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -244,94 +232,95 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
                   ),
                 )
               else
-                ...dashboardState.teachers.map((teacher) => AppCard(
+                ...dashboardState.classrooms.map((classroom) => AppCard(
                       margin: const EdgeInsets.only(bottom: AppConstants.paddingS),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: AppColors.primaryLight,
-                                child: Text(
-                                  teacher.adSoyad.isNotEmpty
-                                      ? teacher.adSoyad[0].toUpperCase()
-                                      : 'T',
-                                  style: AppTextStyles.h6.copyWith(
-                                    color: AppColors.textOnPrimary,
-                                  ),
-                                ),
+                          CircleAvatar(
+                            backgroundColor: AppColors.primaryLight,
+                            child: Text(
+                              classroom.name.isNotEmpty
+                                  ? classroom.name[0].toUpperCase()
+                                  : 'S',
+                              style: AppTextStyles.h6.copyWith(
+                                color: AppColors.textOnPrimary,
                               ),
-                              const SizedBox(width: AppConstants.paddingM),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      teacher.adSoyad,
-                                      style: AppTextStyles.h6.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      teacher.email,
-                                      style: AppTextStyles.body2.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryLight.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Text(
-                                  teacher.ogretmenKodu,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                color: AppColors.error,
-                                onPressed: () => _showRemoveTeacherDialog(
-                                  context,
-                                  ref,
-                                  teacher,
-                                ),
-                                tooltip: 'Öğretmeni Kaldır',
-                              ),
-                            ],
+                            ),
                           ),
-                          if (teacher.locationDisplay != null) ...[
-                            const SizedBox(height: AppConstants.paddingS),
-                            Row(
+                          const SizedBox(width: AppConstants.paddingM),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 16,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
                                 Text(
-                                  teacher.locationDisplay!,
-                                  style: AppTextStyles.caption.copyWith(
+                                  classroom.name,
+                                  style: AppTextStyles.h6.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${classroom.studentCount} öğrenci',
+                                  style: AppTextStyles.body2.copyWith(
                                     color: AppColors.textSecondary,
                                   ),
                                 ),
                               ],
                             ),
-                          ],
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: classroom.code));
+                              context.showSnackBar(
+                                'Sınıf kodu kopyalandı: ${classroom.code}',
+                                backgroundColor: AppColors.success,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryLight.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    classroom.code,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.copy,
+                                    size: 12,
+                                    color: AppColors.primary,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.exit_to_app),
+                            color: AppColors.error,
+                            onPressed: () => _showLeaveClassroomDialog(
+                              context,
+                              ref,
+                              classroom,
+                            ),
+                            tooltip: 'Sınıftan Ayrıl',
+                          ),
                         ],
                       ),
                     )),
@@ -342,4 +331,3 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
     );
   }
 }
-

@@ -9,7 +9,6 @@ class AuthResponse {
   final String email;
   final String role;
   final String adSoyad;
-  final String? ogretmenKodu;
 
   AuthResponse({
     required this.accessToken,
@@ -18,7 +17,6 @@ class AuthResponse {
     required this.email,
     required this.role,
     required this.adSoyad,
-    this.ogretmenKodu,
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
@@ -30,7 +28,6 @@ class AuthResponse {
       email: user['email'],
       role: user['role'],
       adSoyad: user['adSoyad'],
-      ogretmenKodu: user['ogretmenKodu'],
     );
   }
 }

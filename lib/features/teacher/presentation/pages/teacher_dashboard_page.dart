@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/cards/app_card.dart';
@@ -14,6 +15,45 @@ import '../../../auth/data/repositories/auth_repository.dart';
 class TeacherDashboardPage extends ConsumerWidget {
   const TeacherDashboardPage({super.key});
 
+  Future<void> _showCreateClassroomDialog(
+      BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Yeni Sınıf Oluştur'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Sınıf Adı',
+            hintText: 'Örn: 9-A Türkçe',
+          ),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () {
+              final name = controller.text.trim();
+              if (name.isNotEmpty) {
+                ref
+                    .read(teacherDashboardProvider.notifier)
+                    .addClassroom(name);
+                Navigator.of(ctx).pop();
+              }
+            },
+            child: const Text('Oluştur'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(teacherDashboardProvider);
@@ -24,9 +64,7 @@ class TeacherDashboardPage extends ConsumerWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.analytics_outlined),
-            onPressed: () {
-              context.push('/teacher/student-analysis');
-            },
+            onPressed: () => context.push('/teacher/student-analysis'),
             tooltip: 'Öğrenci Analizi',
           ),
           IconButton(
@@ -34,16 +72,19 @@ class TeacherDashboardPage extends ConsumerWidget {
             onPressed: () async {
               ref.read(invalidateUserProvidersProvider)();
               await sl<AuthRepository>().logout();
-              if (context.mounted) {
-                context.pushReplacement('/login');
-              }
+              if (context.mounted) context.pushReplacement('/login');
             },
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCreateClassroomDialog(context, ref),
+        icon: const Icon(Icons.add),
+        label: const Text('Sınıf Oluştur'),
+      ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.read(teacherDashboardProvider.notifier).loadStudents();
+          ref.read(teacherDashboardProvider.notifier).loadClassrooms();
         },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -63,7 +104,8 @@ class TeacherDashboardPage extends ConsumerWidget {
                           backgroundColor: AppColors.primaryLight,
                           child: Text(
                             dashboardState.teacher?.adSoyad.isNotEmpty == true
-                                ? dashboardState.teacher!.adSoyad[0].toUpperCase()
+                                ? dashboardState.teacher!.adSoyad[0]
+                                    .toUpperCase()
                                 : 'T',
                             style: AppTextStyles.h4.copyWith(
                               color: AppColors.textOnPrimary,
@@ -92,23 +134,6 @@ class TeacherDashboardPage extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Text(
-                            dashboardState.teacher?.ogretmenKodu ?? '',
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.accent,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     if (dashboardState.teacher?.okul != null) ...[
@@ -134,12 +159,12 @@ class TeacherDashboardPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: AppConstants.paddingL),
-              // Bağlı Öğrenciler Başlığı
+              // Sınıflarım Başlığı
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Bağlı Öğrenciler',
+                    'Sınıflarım',
                     style: AppTextStyles.h5.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.bold,
@@ -155,7 +180,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      '${dashboardState.students.length}',
+                      '${dashboardState.classrooms.length}',
                       style: AppTextStyles.body2.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
@@ -165,7 +190,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppConstants.paddingM),
-              // Öğrenci Listesi
+              // Sınıf Listesi
               if (dashboardState.isLoading)
                 const Center(
                   child: Padding(
@@ -177,34 +202,27 @@ class TeacherDashboardPage extends ConsumerWidget {
                 AppCard(
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.error_outline,
-                        color: AppColors.error,
-                        size: 48,
-                      ),
+                      Icon(Icons.error_outline,
+                          color: AppColors.error, size: 48),
                       const SizedBox(height: 16),
                       Text(
                         dashboardState.error!,
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.error,
-                        ),
+                        style: AppTextStyles.body2
+                            .copyWith(color: AppColors.error),
                         textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 )
-              else if (dashboardState.students.isEmpty)
+              else if (dashboardState.classrooms.isEmpty)
                 AppCard(
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.person_off_outlined,
-                        color: AppColors.textSecondary,
-                        size: 48,
-                      ),
+                      Icon(Icons.class_outlined,
+                          color: AppColors.textSecondary, size: 48),
                       const SizedBox(height: 16),
                       Text(
-                        'Henüz bağlı öğrenciniz yok',
+                        'Henüz sınıf oluşturmadınız',
                         style: AppTextStyles.body1.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -212,7 +230,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Öğrenciler öğretmen kodunuzu kullanarak size bağlanabilir',
+                        'Sağ alttaki "Sınıf Oluştur" butonuna basarak ilk sınıfınızı oluşturun',
                         style: AppTextStyles.body2.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -222,13 +240,11 @@ class TeacherDashboardPage extends ConsumerWidget {
                   ),
                 )
               else
-                ...dashboardState.students.map((student) => AppCard(
-                      margin: const EdgeInsets.only(bottom: AppConstants.paddingS),
+                ...dashboardState.classrooms.map((classroom) => AppCard(
+                      margin:
+                          const EdgeInsets.only(bottom: AppConstants.paddingS),
                       onTap: () {
-                        context.push(
-                          '/teacher/student-detail',
-                          extra: student.id ?? '',
-                        );
+                        context.push('/teacher/classroom/${classroom.id}');
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,14 +253,8 @@ class TeacherDashboardPage extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 backgroundColor: AppColors.primary,
-                                child: Text(
-                                  student.adSoyad.isNotEmpty
-                                      ? student.adSoyad[0].toUpperCase()
-                                      : 'Ö',
-                                  style: AppTextStyles.h6.copyWith(
-                                    color: AppColors.textOnPrimary,
-                                  ),
-                                ),
+                                child: Icon(Icons.class_outlined,
+                                    color: AppColors.textOnPrimary),
                               ),
                               const SizedBox(width: AppConstants.paddingM),
                               Expanded(
@@ -252,7 +262,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      student.adSoyad,
+                                      classroom.name,
                                       style: AppTextStyles.h6.copyWith(
                                         color: AppColors.textPrimary,
                                         fontWeight: FontWeight.bold,
@@ -260,7 +270,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      student.email,
+                                      '${classroom.studentCount} öğrenci',
                                       style: AppTextStyles.body2.copyWith(
                                         color: AppColors.textSecondary,
                                       ),
@@ -268,34 +278,62 @@ class TeacherDashboardPage extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: AppColors.textSecondary,
-                              ),
-                            ],
-                          ),
-                          if (student.locationDisplay != null) ...[
-                            const SizedBox(height: AppConstants.paddingS),
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 16,
-                                  color: AppColors.textSecondary,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  student.locationDisplay!,
-                                  style: AppTextStyles.caption.copyWith(
-                                    color: AppColors.textSecondary,
+                              // Sınıf kodu chip'i (kopyalanabilir)
+                              GestureDetector(
+                                onTap: () {
+                                  Clipboard.setData(
+                                      ClipboardData(text: classroom.code));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('Sınıf kodu kopyalandı'),
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppColors.accent.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: AppColors.accent
+                                            .withOpacity(0.4)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        classroom.code,
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.accent,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(Icons.copy,
+                                          size: 12,
+                                          color: AppColors.accent
+                                              .withOpacity(0.7)),
+                                    ],
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.chevron_right,
+                                  color: AppColors.textSecondary),
+                            ],
+                          ),
                         ],
                       ),
                     )),
+              // FAB için boşluk bırak
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -303,4 +341,3 @@ class TeacherDashboardPage extends ConsumerWidget {
     );
   }
 }
-

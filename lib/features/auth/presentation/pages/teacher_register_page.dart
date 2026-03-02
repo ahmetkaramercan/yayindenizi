@@ -81,57 +81,11 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
       });
     }
 
-    // Başarılı kayıt durumunda kodu göster
+    // Başarılı kayıt → direkt dashboard'a yönlendir
     if (registerState.isSuccess) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final kod = registerState.ogretmenKodu ?? '-';
         ref.read(teacherRegisterProvider.notifier).reset();
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Kayıt Başarılı!'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Öğretmen kodunuz aşağıdadır. Öğrencileriniz bu kodu kullanarak size bağlanacaktır.',
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.primary),
-                  ),
-                  child: Text(
-                    kod,
-                    style: AppTextStyles.h3.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Lütfen bu kodu not alın.',
-                  style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                  context.pop();
-                },
-                child: const Text('Tamam, giriş yapacağım'),
-              ),
-            ],
-          ),
-        );
+        context.pushReplacement('/teacher/dashboard');
       });
     }
 
@@ -170,7 +124,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-                // Ad Soyad Field
                 AppTextField(
                   label: 'Ad Soyad',
                   hint: 'Adınız ve soyadınız',
@@ -180,7 +133,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   prefixIcon: const Icon(Icons.person_outlined),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // Email Field
                 AppTextField(
                   label: 'Email *',
                   hint: 'ornek@email.com',
@@ -190,7 +142,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   prefixIcon: const Icon(Icons.email_outlined),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // Password Field
                 AppTextField(
                   label: 'Şifre *',
                   hint: 'En az 6 karakter',
@@ -212,7 +163,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // Password Confirm Field
                 AppTextField(
                   label: 'Şifre Tekrar *',
                   hint: 'Şifrenizi tekrar girin',
@@ -237,7 +187,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // İl / İlçe Seçimi
                 CityDistrictSelector(
                   selectedCityId: _selectedCity?.id,
                   selectedDistrictId: _selectedDistrict?.id,
@@ -247,7 +196,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   onDistrictSelected: (d) => setState(() => _selectedDistrict = d),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // Okul Field
                 AppTextField(
                   label: 'Okul',
                   hint: 'Okul adı',
@@ -256,7 +204,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   prefixIcon: const Icon(Icons.school_outlined),
                 ),
                 const SizedBox(height: AppConstants.paddingL),
-                // Register Button
                 AppButton(
                   text: 'Kayıt Ol',
                   onPressed: registerState.isLoading ? null : _handleRegister,
@@ -265,7 +212,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                   type: AppButtonType.primary,
                 ),
                 const SizedBox(height: AppConstants.paddingM),
-                // Login Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -295,4 +241,3 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
     );
   }
 }
-

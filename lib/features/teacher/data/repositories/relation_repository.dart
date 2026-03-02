@@ -28,7 +28,6 @@ class RelationRepository {
         id: j['id'],
         adSoyad: j['adSoyad'] ?? '',
         email: j['email'] ?? '',
-        ogretmenKodu: j['ogretmenKodu'] ?? '',
         okul: j['okul'],
         cityId: j['cityId'],
         districtId: j['districtId'],

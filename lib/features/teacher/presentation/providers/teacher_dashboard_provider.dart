@@ -1,32 +1,32 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../teacher/domain/entities/teacher.dart';
-import '../../../student/domain/entities/student.dart';
+import '../../../teacher/domain/entities/classroom.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../student/data/repositories/user_repository.dart';
-import '../../data/repositories/relation_repository.dart';
+import '../../data/repositories/classroom_repository.dart';
 
 class TeacherDashboardState {
   final Teacher? teacher;
-  final List<Student> students;
+  final List<Classroom> classrooms;
   final bool isLoading;
   final String? error;
 
   TeacherDashboardState({
     this.teacher,
-    this.students = const [],
+    this.classrooms = const [],
     this.isLoading = false,
     this.error,
   });
 
   TeacherDashboardState copyWith({
     Teacher? teacher,
-    List<Student>? students,
+    List<Classroom>? classrooms,
     bool? isLoading,
     String? error,
   }) {
     return TeacherDashboardState(
       teacher: teacher ?? this.teacher,
-      students: students ?? this.students,
+      classrooms: classrooms ?? this.classrooms,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -37,11 +37,11 @@ class TeacherDashboardNotifier
     extends StateNotifier<TeacherDashboardState> {
   TeacherDashboardNotifier() : super(TeacherDashboardState()) {
     loadTeacherInfo();
-    loadStudents();
+    loadClassrooms();
   }
 
   final _userRepo = sl<UserRepository>();
-  final _relationRepo = sl<RelationRepository>();
+  final _classroomRepo = sl<ClassroomRepository>();
 
   Future<void> loadTeacherInfo() async {
     try {
@@ -52,33 +52,31 @@ class TeacherDashboardNotifier
     }
   }
 
-  Future<void> loadStudents() async {
+  Future<void> loadClassrooms() async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final students = await _relationRepo.getMyStudents();
-
-      state = state.copyWith(
-        students: students,
-        isLoading: false,
-      );
+      final classrooms = await _classroomRepo.getMyClassrooms();
+      state = state.copyWith(classrooms: classrooms, isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
-  Future<void> removeStudent(String studentId) async {
+  Future<void> addClassroom(String name) async {
     try {
-      await _relationRepo.removeStudent(studentId);
+      final classroom = await _classroomRepo.createClassroom(name);
+      state = state.copyWith(classrooms: [classroom, ...state.classrooms]);
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
+    }
+  }
 
-      final updatedStudents = state.students
-          .where((s) => s.id != studentId)
-          .toList();
-
-      state = state.copyWith(students: updatedStudents);
+  Future<void> deleteClassroom(String classroomId) async {
+    try {
+      await _classroomRepo.deleteClassroom(classroomId);
+      final updated = state.classrooms.where((c) => c.id != classroomId).toList();
+      state = state.copyWith(classrooms: updated);
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }

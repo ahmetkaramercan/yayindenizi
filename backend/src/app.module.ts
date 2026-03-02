@@ -10,7 +10,7 @@ import { TestsModule } from './modules/tests/tests.module';
 import { TestResultsModule } from './modules/test-results/test-results.module';
 import { LearningOutcomesModule } from './modules/learning-outcomes/learning-outcomes.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
-import { TeacherStudentModule } from './modules/teacher-student/teacher-student.module';
+import { ClassroomModule } from './modules/classroom/classroom.module';
 import { AnswersModule } from './modules/answers/answers.module';
 import { CitiesModule } from './modules/cities/cities.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
@@ -28,7 +28,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     TestResultsModule,
     LearningOutcomesModule,
     AnalyticsModule,
-    TeacherStudentModule,
+    ClassroomModule,
     AnswersModule,
     CitiesModule,
   ],
