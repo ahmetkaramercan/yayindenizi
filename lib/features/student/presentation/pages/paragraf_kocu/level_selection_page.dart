@@ -36,6 +36,7 @@ class LevelSelectionPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sectionsAsync = ref.watch(_bookSectionsProvider(book.id));
     final isLevelBasedBook = book.category == BookCategory.paragraf;
+    final isKonuBook = book.category == BookCategory.konu;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,15 +70,38 @@ class LevelSelectionPage extends ConsumerWidget {
 
           sections.sort((a, b) => (a['orderIndex'] as int? ?? 0)
               .compareTo(b['orderIndex'] as int? ?? 0));
-          final allTests = sections
-              .expand((section) => (section['tests'] as List? ?? const []))
-              .cast<Map<String, dynamic>>()
-              .toList();
-          allTests.sort((a, b) {
-            final aNum = _extractTestNumber(a['title'] as String? ?? '');
-            final bNum = _extractTestNumber(b['title'] as String? ?? '');
-            return aNum.compareTo(bNum);
-          });
+
+          // DENEME kitapları için tüm testleri düz liste olarak göster
+          final allTests = isKonuBook
+              ? <Map<String, dynamic>>[]
+              : (sections
+                    .expand(
+                        (section) => (section['tests'] as List? ?? const []))
+                    .cast<Map<String, dynamic>>()
+                    .toList()
+                  ..sort((a, b) {
+                    final aNum =
+                        _extractTestNumber(a['title'] as String? ?? '');
+                    final bNum =
+                        _extractTestNumber(b['title'] as String? ?? '');
+                    return aNum.compareTo(bNum);
+                  }));
+
+          String headerTitle;
+          String headerSubtitle;
+          if (isLevelBasedBook) {
+            headerTitle = 'Seviye Seçin';
+            headerSubtitle =
+                '${sections.length} farklı zorluk seviyesinden birini seçerek test çözebilirsiniz';
+          } else if (isKonuBook) {
+            headerTitle = 'Konular';
+            headerSubtitle =
+                '${sections.length} konudan birini seçerek test çözebilirsiniz';
+          } else {
+            headerTitle = 'Denemeler';
+            headerSubtitle =
+                '${allTests.length} denemeden birini seçerek test çözebilirsiniz';
+          }
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(AppConstants.paddingM),
@@ -129,7 +153,7 @@ class LevelSelectionPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppConstants.paddingL),
                 Text(
-                  isLevelBasedBook ? 'Seviye Seçin' : 'Denemeler',
+                  headerTitle,
                   style: AppTextStyles.h4.copyWith(
                     color: AppColors.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -137,15 +161,14 @@ class LevelSelectionPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isLevelBasedBook
-                      ? '${sections.length} farklı zorluk seviyesinden birini seçerek test çözebilirsiniz'
-                      : '${allTests.length} denemeden birini seçerek test çözebilirsiniz',
+                  headerSubtitle,
                   style: AppTextStyles.body2.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingL),
                 if (isLevelBasedBook)
+                  // PARAGRAF: Grid ile seviye kartları
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -177,15 +200,93 @@ class LevelSelectionPage extends ConsumerWidget {
                                   section['title'] ?? 'Bölüm ${index + 1}',
                               'bookTitle': book.title,
                               'bookId': book.id,
-                              'isParagrafBook':
-                                  book.category == BookCategory.paragraf,
+                              'isParagrafBook': true,
                             },
                           );
                         },
                       );
                     },
                   )
+                else if (isKonuBook)
+                  // KONU: Kazanım başlıklarıyla bölüm listesi
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: sections.length,
+                    itemBuilder: (context, index) {
+                      final section = sections[index];
+                      final testCount = section['_count']?['tests'] ??
+                          (section['tests'] as List?)?.length ??
+                          0;
+                      final sectionTitle =
+                          section['title'] as String? ?? 'Konu ${index + 1}';
+
+                      return AppCard(
+                        margin: const EdgeInsets.only(
+                          bottom: AppConstants.paddingM,
+                        ),
+                        onTap: () {
+                          context.push(
+                            '/student/section-tests',
+                            extra: {
+                              'sectionId': section['id'],
+                              'sectionTitle': sectionTitle,
+                              'bookTitle': book.title,
+                              'bookId': book.id,
+                              'isParagrafBook': false,
+                            },
+                          );
+                        },
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(
+                                  AppConstants.radiusM,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Icon(
+                                  Icons.menu_book_outlined,
+                                  color: AppColors.primary,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppConstants.paddingM),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    sectionTitle,
+                                    style: AppTextStyles.body1.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    '$testCount test',
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  )
                 else
+                  // DENEME: Düz test listesi
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -209,7 +310,7 @@ class LevelSelectionPage extends ConsumerWidget {
                               width: 40,
                               height: 40,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.12),
+                                color: AppColors.primary.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(
                                   AppConstants.radiusM,
                                 ),
@@ -280,7 +381,7 @@ class _SectionCard extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               shape: BoxShape.circle,
             ),
             child: isLevelBasedBook

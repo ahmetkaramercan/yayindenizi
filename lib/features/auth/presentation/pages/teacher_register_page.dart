@@ -8,7 +8,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/extensions.dart';
-import '../../../../core/utils/teacher_code_generator.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../cities/data/models/city_model.dart';
 import '../../../cities/data/models/district_model.dart';
@@ -29,19 +28,11 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
   final _passwordController = TextEditingController();
   final _passwordConfirmController = TextEditingController();
   final _okulController = TextEditingController();
-  final _ogretmenKoduController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscurePasswordConfirm = true;
 
   CityModel? _selectedCity;
   DistrictModel? _selectedDistrict;
-
-  @override
-  void initState() {
-    super.initState();
-    // Otomatik öğretmen kodu oluştur
-    _ogretmenKoduController.text = TeacherCodeGenerator.generate();
-  }
 
   @override
   void dispose() {
@@ -50,7 +41,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
     _passwordController.dispose();
     _passwordConfirmController.dispose();
     _okulController.dispose();
-    _ogretmenKoduController.dispose();
     super.dispose();
   }
 
@@ -72,7 +62,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
             okul: _okulController.text.trim().isEmpty
                 ? null
                 : _okulController.text.trim(),
-            ogretmenKodu: _ogretmenKoduController.text.trim(),
           );
     }
   }
@@ -92,14 +81,56 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
       });
     }
 
-    // Başarılı kayıt durumunda yönlendirme
+    // Başarılı kayıt durumunda kodu göster
     if (registerState.isSuccess) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final kod = registerState.ogretmenKodu ?? '-';
         ref.read(teacherRegisterProvider.notifier).reset();
-        context.pop();
-        context.showSnackBar(
-          'Kayıt başarılı! Giriş yapabilirsiniz.',
-          backgroundColor: AppColors.success,
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Kayıt Başarılı!'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Öğretmen kodunuz aşağıdadır. Öğrencileriniz bu kodu kullanarak size bağlanacaktır.',
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLight.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primary),
+                  ),
+                  child: Text(
+                    kod,
+                    style: AppTextStyles.h3.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Lütfen bu kodu not alın.',
+                  style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  context.pop();
+                },
+                child: const Text('Tamam, giriş yapacağım'),
+              ),
+            ],
+          ),
         );
       });
     }
@@ -203,54 +234,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                         _obscurePasswordConfirm = !_obscurePasswordConfirm;
                       });
                     },
-                  ),
-                ),
-                const SizedBox(height: AppConstants.paddingM),
-                // Öğretmen Kodu Field (Otomatik oluşturulmuş, readonly)
-                AppTextField(
-                  label: 'Öğretmen Kodu *',
-                  hint: 'Otomatik oluşturuldu',
-                  controller: _ogretmenKoduController,
-                  readOnly: true,
-                  validator: (value) => Validators.required(value, fieldName: 'Öğretmen Kodu'),
-                  prefixIcon: const Icon(Icons.badge_outlined),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.refresh),
-                    tooltip: 'Yeni kod oluştur',
-                    onPressed: () {
-                      setState(() {
-                        _ogretmenKoduController.text = TeacherCodeGenerator.generate();
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.primaryLight.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        size: 20,
-                        color: AppColors.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Bu kod öğrencileriniz tarafından kullanılacaktır. Lütfen kaydedin.',
-                          style: AppTextStyles.caption.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
