@@ -28,9 +28,21 @@
     "seed:denemeler:mappings": "ts-node prisma/seed-denemeler-mappings.ts",
     "seed:edebiyat:structure": "ts-node prisma/seed-edebiyat-structure.ts",
     "seed:dilbilgisi:structure": "ts-node prisma/seed-dilbilgisi-structure.ts",
+    "seed:dilbilgisi:outcomes": "ts-node prisma/seed-dilbilgisi-denemeleri-outcomes.ts",
+    "seed:dilbilgisi:mappings": "ts-node prisma/seed-dilbilgisi-denemeleri-mappings.ts",
     "seed:turkce:sorubankasi:structure": "ts-node prisma/seed-turkce-sorubankasi-structure.ts",
     "seed:turkce:sorubankasi:outcomes": "ts-node prisma/seed-turkce-sorubankasi-outcomes.ts",
-    "seed:turkce:sorubankasi:mappings": "ts-node prisma/seed-turkce-sorubankasi-mappings.ts"
+    "seed:turkce:sorubankasi:mappings": "ts-node prisma/seed-turkce-sorubankasi-mappings.ts",
+    "seed:dilbilgisi:sorubankasi:structure": "ts-node prisma/seed-dilbilgisi-sorubankasi-structure.ts",
+    "seed:dilbilgisi:sorubankasi:outcomes": "ts-node prisma/seed-dilbilgisi-sorubankasi-outcomes.ts",
+    "seed:dilbilgisi:sorubankasi:mappings": "ts-node prisma/seed-dilbilgisi-sorubankasi-mappings.ts",
+    "seed:outcomes": "ts-node prisma/seed-outcomes.ts",
+    "seed:paragraf-kocu:structure": "ts-node prisma/seed-paragraf-kocu-hafta-esasli-structure.ts",
+    "seed:tyt-turkce:structure": "ts-node prisma/seed-tyt-turkce-denemeleri-structure.ts",
+    "seed:edebiyat-soru-bankasi:structure": "ts-node prisma/seed-edebiyat-soru-bankasi-structure.ts",
+    "seed:edebiyat-soru-bankasi:outcomes": "ts-node prisma/seed-edebiyat-soru-bankasi-outcomes.ts",
+    "seed:edebiyat-soru-bankasi:mappings": "ts-node prisma/seed-edebiyat-soru-bankasi-mappings.ts",
+    "seed:all": "npm run prisma:seed && npm run seed:paragraf-kocu:structure && npm run seed:outcomes && npm run seed:denemeler:structure && npm run seed:denemeler && npm run seed:denemeler:mappings && npm run seed:edebiyat:structure && npm run seed:dilbilgisi:structure && npm run seed:dilbilgisi:outcomes && npm run seed:dilbilgisi:mappings && npm run seed:tyt-turkce:structure && npm run seed:turkce:sorubankasi:structure && npm run seed:turkce:sorubankasi:outcomes && npm run seed:turkce:sorubankasi:mappings && npm run seed:dilbilgisi:sorubankasi:structure && npm run seed:dilbilgisi:sorubankasi:outcomes && npm run seed:dilbilgisi:sorubankasi:mappings && npm run seed:edebiyat-soru-bankasi:structure && npm run seed:edebiyat-soru-bankasi:outcomes && npm run seed:edebiyat-soru-bankasi:mappings"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.0",

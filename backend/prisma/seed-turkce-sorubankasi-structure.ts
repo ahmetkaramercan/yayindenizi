@@ -200,6 +200,232 @@ const SECTIONS: {
       { title: 'Test 10', answers: ['D', 'D', 'B', 'C', 'E', 'D'] },
     ],
   },
+  {
+    title: 'Ses Bilgisi',
+    description: 'Ses bilgisine ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'B', 'A', 'C', 'D', 'E', 'A', 'E', 'D', 'B', 'D'] },
+      { title: 'Test 2', answers: ['B', 'B', 'B', 'C', 'D', 'A', 'A', 'C', 'C', 'E'] },
+      { title: 'Test 3', answers: ['E', 'D', 'B', 'C', 'A', 'E', 'B', 'B', 'E', 'D'] },
+      { title: 'Test 4', answers: ['A', 'C', 'A', 'C', 'E', 'A', 'A', 'C', 'D', 'B'] },
+    ],
+  },
+  {
+    title: 'Yazım Kuralları',
+    description: 'Yazım kurallarına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'A', 'B', 'E', 'D', 'A', 'D', 'C', 'E', 'E'] },
+      { title: 'Test 2', answers: ['A', 'B', 'A', 'D', 'B', 'C', 'B', 'D', 'D'] },
+      { title: 'Test 3', answers: ['D', 'E', 'C', 'E', 'A', 'C', 'A', 'A', 'C', 'E', 'A', 'C'] },
+      { title: 'Test 4', answers: ['E', 'A', 'B', 'A', 'E', 'D', 'E', 'D', 'C', 'D', 'D', 'A'] },
+    ],
+  },
+  {
+    title: 'Noktalama İşaretleri',
+    description: 'Noktalama işaretlerine ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['C', 'C', 'A', 'B', 'E', 'E', 'A', 'E', 'A', 'A', 'E'] },
+      { title: 'Test 2', answers: ['C', 'A', 'E', 'D', 'C', 'B', 'E', 'C', 'C', 'D', 'C'] },
+      { title: 'Test 3', answers: ['B', 'A', 'E', 'B', 'D', 'C', 'A', 'D', 'D', 'B', 'A', 'D'] },
+      { title: 'Test 4', answers: ['D', 'E', 'A', 'B', 'E', 'B', 'B', 'A', 'D', 'B', 'E', 'B'] },
+    ],
+  },
+  {
+    title: 'Ses Bilgisi - Yazım Kuralları - Noktalama İşaretleri Karma Testler',
+    description: 'Ses bilgisi, yazım kuralları ve noktalama işaretleri karma testleri',
+    tests: [
+      { title: 'Test 1', answers: ['A', 'D', 'A', 'A', 'D', 'C', 'A', 'B', 'E', 'B', 'C'] },
+      { title: 'Test 2', answers: ['D', 'D', 'E', 'B', 'E', 'C', 'C', 'C', 'E', 'B'] },
+      { title: 'Test 3', answers: ['C', 'C', 'D', 'B', 'C', 'A', 'C', 'D', 'B', 'B'] },
+      { title: 'Test 4', answers: ['B', 'C', 'A', 'B', 'D', 'E', 'B', 'E', 'A', 'C', 'D', 'B'] },
+      { title: 'Test 5', answers: ['B', 'C', 'C', 'D', 'D', 'E', 'C', 'B', 'A', 'C'] },
+    ],
+  },
+  {
+    title: 'Kök - Ek Kavramları',
+    description: 'Kök ve ek kavramlarına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'A', 'C', 'B', 'A', 'A', 'C', 'C', 'C', 'C', 'C', 'C'] },
+      { title: 'Test 2', answers: ['B', 'C', 'A', 'D', 'A', 'D', 'E', 'B', 'C', 'E', 'A', 'B'] },
+    ],
+  },
+  {
+    title: 'Sözcüğün Yapısı',
+    description: 'Sözcüğün yapısına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'C', 'A', 'D', 'D', 'E', 'C', 'E', 'E', 'A', 'D'] },
+      { title: 'Test 2', answers: ['B', 'A', 'A', 'C', 'E', 'A', 'B', 'E', 'C', 'E', 'A', 'D'] },
+    ],
+  },
+  {
+    title: 'Sözcükte Yapı Karma Test',
+    description: 'Sözcükte yapı karma testleri',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'C', 'D', 'B', 'D', 'E', 'A', 'B', 'C', 'C', 'C'] },
+      { title: 'Test 2', answers: ['A', 'B', 'A', 'C', 'D', 'E', 'D', 'B', 'E', 'E', 'E', 'B'] },
+    ],
+  },
+  {
+    title: 'İsim (Ad)',
+    description: 'İsim (Ad) konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'D', 'C', 'B', 'C', 'A', 'D', 'D', 'A', 'E', 'C', 'E'] },
+      { title: 'Test 2', answers: ['C', 'D', 'D', 'D', 'A', 'D', 'A', 'C', 'E', 'B', 'E'] },
+      { title: 'Test 3', answers: ['A', 'D', 'D', 'B', 'C', 'E', 'B', 'C', 'E', 'E'] },
+    ],
+  },
+  {
+    title: 'Sıfat (Ön Ad)',
+    description: 'Sıfat (Ön Ad) konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'C', 'B', 'E', 'C', 'D', 'E', 'E', 'C', 'E', 'B', 'A'] },
+      { title: 'Test 2', answers: ['D', 'E', 'A', 'B', 'A', 'B', 'A', 'B', 'A', 'A', 'E', 'A'] },
+      { title: 'Test 3', answers: ['A', 'A', 'E', 'A', 'C', 'B', 'E', 'C', 'D', 'B', 'E'] },
+    ],
+  },
+  {
+    title: 'Tamlamalar',
+    description: 'Tamlamalara ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['C', 'C', 'B', 'E', 'E', 'E', 'B', 'C', 'E', 'D', 'A', 'B'] },
+      { title: 'Test 2', answers: ['E', 'A', 'E', 'C', 'D', 'C', 'A', 'C', 'E'] },
+      { title: 'Test 3', answers: ['C', 'C', 'C', 'C', 'B', 'B', 'C', 'E', 'E', 'A', 'E', 'C'] },
+      { title: 'Test 4', answers: ['D', 'A', 'D', 'C', 'E', 'D', 'A', 'E', 'A', 'A', 'B'] },
+    ],
+  },
+  {
+    title: 'Zamir (Adıl)',
+    description: 'Zamir (Adıl) konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['A', 'C', 'C', 'A', 'E', 'E', 'E', 'D', 'C', 'E', 'C', 'C'] },
+      { title: 'Test 2', answers: ['D', 'A', 'C', 'B', 'A', 'B', 'D', 'B', 'C', 'E', 'B'] },
+      { title: 'Test 3', answers: ['E', 'E', 'C', 'A', 'C', 'A', 'D', 'C', 'E', 'E', 'A', 'B'] },
+      { title: 'Test 4', answers: ['E', 'C', 'D', 'E', 'B', 'C', 'D', 'D', 'D', 'A', 'E', 'C'] },
+    ],
+  },
+  {
+    title: 'Zarf (Belirteç)',
+    description: 'Zarf (Belirteç) konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'C', 'C', 'B', 'E', 'C', 'D', 'C', 'A', 'D', 'D', 'E'] },
+      { title: 'Test 2', answers: ['E', 'C', 'C', 'E', 'B', 'D', 'B', 'C', 'B', 'B', 'C', 'D', 'E'] },
+      { title: 'Test 3', answers: ['C', 'E', 'A', 'D', 'A', 'C', 'E', 'A', 'A', 'C', 'B', 'A'] },
+      { title: 'Test 4', answers: ['D', 'A', 'C', 'C', 'B', 'B', 'D', 'E', 'B', 'E', 'C', 'E'] },
+    ],
+  },
+  {
+    title: 'Edat - Bağlaç - Ünlem',
+    description: 'Edat, bağlaç ve ünleme ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'D', 'C', 'D', 'E', 'C', 'A', 'E', 'C', 'D', 'B', 'A'] },
+      { title: 'Test 2', answers: ['E', 'A', 'C', 'D', 'E', 'D', 'C', 'E', 'D', 'A', 'C', 'C'] },
+      { title: 'Test 3', answers: ['C', 'E', 'A', 'B', 'A', 'E', 'E', 'A', 'D', 'C', 'C', 'A', 'C'] },
+      { title: 'Test 4', answers: ['B', 'A', 'E', 'E', 'A', 'D', 'C', 'C', 'D', 'B', 'B', 'B'] },
+    ],
+  },
+  {
+    title: 'Fiilde Anlam ve Kip / Ek Fiil',
+    description: 'Fiilde anlam ve kip / ek fiil konularına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'D', 'E', 'A', 'C', 'A', 'D', 'A', 'C', 'B', 'B', 'B'] },
+      { title: 'Test 2', answers: ['A', 'C', 'A', 'D', 'B', 'B', 'A', 'B', 'D', 'B', 'C', 'D'] },
+    ],
+  },
+  {
+    title: 'Fiilde Yapı',
+    description: 'Fiilde yapı konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['E', 'A', 'D', 'D', 'B', 'B', 'C', 'D', 'E', 'E', 'C', 'A'] },
+      { title: 'Test 2', answers: ['A', 'D', 'D', 'C', 'D', 'C', 'A', 'A', 'E', 'A', 'C'] },
+    ],
+  },
+  {
+    title: 'Fiilimsiler',
+    description: 'Fiilimsiler konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['C', 'E', 'B', 'E', 'A', 'A', 'D', 'E', 'D', 'C', 'A', 'B'] },
+      { title: 'Test 2', answers: ['A', 'E', 'B', 'C', 'C', 'B', 'A', 'B', 'B', 'B', 'C', 'B'] },
+      { title: 'Test 3', answers: ['D', 'E', 'D', 'E', 'B', 'E', 'C', 'A', 'E', 'B', 'A', 'C'] },
+      { title: 'Test 4', answers: ['A', 'A', 'C', 'D', 'B', 'A', 'C', 'B', 'C', 'B', 'E'] },
+    ],
+  },
+  {
+    title: 'Fiilde Çatı',
+    description: 'Fiilde çatı konusuna ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['A', 'B', 'B', 'C', 'A', 'C', 'A', 'C', 'B', 'D', 'A', 'E'] },
+      { title: 'Test 2', answers: ['B', 'B', 'A', 'A', 'B', 'E', 'B', 'D', 'C', 'D', 'C'] },
+      { title: 'Test 3', answers: ['D', 'B', 'A', 'C', 'E', 'C', 'A', 'C', 'C', 'D', 'D', 'B'] },
+    ],
+  },
+  {
+    title: 'Sözcük Türleri Karma Test',
+    description: 'Sözcük türleri karma testleri',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'A', 'B', 'D', 'E', 'D', 'E', 'A', 'E', 'A', 'E', 'E'] },
+      { title: 'Test 2', answers: ['E', 'C', 'D', 'B', 'C', 'C', 'B', 'D', 'D', 'D', 'D', 'A'] },
+      { title: 'Test 3', answers: ['E', 'D', 'C', 'E', 'A', 'D', 'B', 'B', 'D', 'D', 'E'] },
+      { title: 'Test 4', answers: ['B', 'C', 'C', 'A', 'D', 'B', 'B', 'B', 'D', 'B', 'B', 'D'] },
+      { title: 'Test 5', answers: ['A', 'A', 'A', 'D', 'A', 'C', 'B', 'C', 'D', 'D', 'C'] },
+      { title: 'Test 6', answers: ['D', 'B', 'E', 'D', 'E', 'B', 'C', 'C', 'E', 'B', 'A'] },
+      { title: 'Test 7', answers: ['C', 'D', 'B', 'B', 'A', 'D', 'B', 'E', 'D', 'D', 'C', 'E'] },
+      { title: 'Test 8', answers: ['B', 'B', 'E', 'A', 'C', 'D', 'B', 'E', 'E', 'B', 'E'] },
+    ],
+  },
+  {
+    title: 'Cümlenin Ögeleri',
+    description: 'Cümlenin ögelerine ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'C', 'D', 'A', 'C', 'B', 'C', 'B', 'D', 'E', 'D', 'A'] },
+      { title: 'Test 2', answers: ['D', 'C', 'C', 'B', 'D', 'B', 'E', 'C', 'E', 'E', 'E', 'C'] },
+      { title: 'Test 3', answers: ['C', 'C', 'C', 'A', 'B', 'B', 'D', 'C', 'C', 'B', 'D', 'A'] },
+      { title: 'Test 4', answers: ['A', 'B', 'E', 'B', 'A', 'D', 'E', 'D', 'D'] },
+    ],
+  },
+  {
+    title: 'Cümle Türleri',
+    description: 'Cümle türlerine ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['C', 'A', 'A', 'B', 'D', 'B', 'D', 'A', 'C', 'B', 'C', 'B'] },
+      { title: 'Test 2', answers: ['A', 'C', 'B', 'B', 'E', 'B', 'C', 'B', 'E', 'C', 'A', 'C'] },
+      { title: 'Test 3', answers: ['E', 'A', 'B', 'D', 'D', 'A', 'D', 'E', 'A', 'A', 'D'] },
+      { title: 'Test 4', answers: ['B', 'B', 'D', 'B', 'B', 'B', 'A', 'E', 'A', 'A', 'D', 'C'] },
+    ],
+  },
+  {
+    title: 'Cümle Bilgisi Karma Test',
+    description: 'Cümle bilgisi karma testleri',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'B', 'C', 'A', 'B', 'C', 'E', 'E', 'B', 'C', 'B', 'B', 'D'] },
+    ],
+  },
+  {
+    title: 'Dil Bilgisi Karma Testler',
+    description: 'Dil bilgisi karma testleri',
+    tests: [
+      { title: 'Test 1', answers: ['A', 'C', 'D', 'D', 'A', 'D', 'D', 'C', 'B', 'A', 'E'] },
+      { title: 'Test 2', answers: ['B', 'E', 'A', 'E', 'A', 'C', 'B', 'C', 'B', 'B', 'D', 'C'] },
+      { title: 'Test 3', answers: ['C', 'B', 'E', 'D', 'C', 'A', 'A', 'D', 'E', 'C', 'C', 'C'] },
+      { title: 'Test 4', answers: ['D', 'B', 'A', 'E', 'C', 'A', 'C', 'B', 'E', 'E', 'A'] },
+      { title: 'Test 5', answers: ['B', 'D', 'D', 'E', 'E', 'B', 'B', 'E', 'C', 'C', 'E', 'D'] },
+    ],
+  },
+  {
+    title: 'Anlama Dayalı Anlatım Bozuklukları',
+    description: 'Anlama dayalı anlatım bozukluklarına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['B', 'C', 'C', 'A', 'E', 'C', 'D', 'B', 'B', 'C', 'E'] },
+      { title: 'Test 2', answers: ['D', 'A', 'E', 'E', 'D', 'E', 'D', 'B', 'E', 'C', 'D', 'E'] },
+    ],
+  },
+  {
+    title: 'Dil Bilgisi Dayalı Anlatım Bozuklukları',
+    description: 'Dil bilgisi dayalı anlatım bozukluklarına ait testler',
+    tests: [
+      { title: 'Test 1', answers: ['D', 'C', 'C', 'B', 'C', 'E', 'C', 'D', 'B', 'C', 'B', 'C'] },
+      { title: 'Test 2', answers: ['C', 'C', 'A', 'A', 'C', 'B', 'C', 'B', 'B', 'D', 'D', 'C'] },
+    ],
+  },
 ];
 
 async function main() {

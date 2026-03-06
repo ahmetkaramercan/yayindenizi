@@ -22,6 +22,179 @@ const OUTCOMES: { code: string; name: string; category: string }[] = [
   { code: '21.5.10', name: 'Paragrafa Özgü Soru Kökü', category: 'Paragraf Anlam' },
 ];
 
+// testNo (global 1-160) -> cevap anahtarı (A=0, B=1, C=2, D=3, E=4)
+// Seviye i, yerel test j → globalTestNo = (i-1)*20 + j
+const ANSWER_KEYS: { [testNo: number]: number[] } = {
+  // === Seviye 1 (Test 1-20) ===
+  1:   [3,0,4,2,0,4,1,2],   // DAECAEBC
+  2:   [2,4,3,1,1,0,2],     // CEDBBAC
+  3:   [4,2,0,1,3,1,2,4],   // ECABDBCE
+  4:   [3,0,0,4,2,4,2,3],   // DAAECECD
+  5:   [0,3,2,2,4,1,1,3],   // ADCCEBBD
+  6:   [2,0,1,2,3,4,1,0],   // CABCDEBA
+  7:   [0,3,4,1,2,2,4,3],   // ADEBCCED
+  8:   [1,3,3,2,0,4,1,4],   // BDDCAEBE
+  9:   [3,2,1,0,1,4,0],     // DCBABEA
+  10:  [4,1,3,2,4,1,0,3],   // EBDCEBAD
+  11:  [3,1,4,1,2,0,2],     // DBEBCAC
+  12:  [2,0,0,3,3,1,4,2],   // CAADDBEC
+  13:  [3,4,2,1,4,0,0,3],   // DECBEAAD
+  14:  [2,1,3,4,0,3,2,1],   // CBDEADCB
+  15:  [3,2,4,3,1,0,2],     // DCEDBAC
+  16:  [3,3,1,0,2,4,0,2],   // DDBACEAC
+  17:  [2,1,3,0,4,2,0,4],   // CBDAECAE
+  18:  [3,4,1,1,3,0,0,4],   // DEBBDAAE
+  19:  [3,1,2,4,0,2,4,0],   // DBCEACEA
+  20:  [3,2,4,1,2,0,1,3],   // DCEBCABD
+  // === Seviye 2 (Test 21-40) ===
+  21:  [1,1,3,4,0,3,2],     // BBDEADC
+  22:  [2,3,3,1,1,0,4,2],   // CDDBBAEC
+  23:  [0,1,2,1,4,0,2,3],   // ABCBEACD
+  24:  [3,4,2,3,1,0,2,4],   // DECDBACE
+  25:  [4,4,2,3,0,1,0],     // EECDABA
+  26:  [4,3,3,2,3,0,2],     // EDDCDAC
+  27:  [3,4,1,1,4,0,2],     // DEBBEAC
+  28:  [4,1,2,3,0,2,3,1],   // EBCDACDB
+  29:  [2,1,0,2,3,4],       // CBACDE
+  30:  [2,4,4,1,2,0,3,1],   // CEEBCADB
+  31:  [2,1,3,4,0,1,2],     // CBDEABC
+  32:  [2,4,1,2,0,1,4],     // CEBCABE
+  33:  [3,2,3,4,1,0,0,3],   // DCDEBAAD
+  34:  [1,2,1,4,2,3,4,0],   // BCBECDEA
+  35:  [1,1,4,2,2,0,3,4],   // BBECCADE
+  36:  [3,2,1,0,3,4],       // DCBADE
+  37:  [3,3,1,0,4,0,2],     // DDBAEAC
+  38:  [1,3,1,4,2,0,3],     // BDBECAD
+  39:  [1,0,3,1,4,0,2],     // BADBEAC
+  40:  [1,4,2,3,0,3],       // BECDAD
+  // === Seviye 3 (Test 41-60) ===
+  41:  [3,0,4,3,1,2],       // DAEDBC
+  42:  [2,4,4,1,3,3,0],     // CEEBDDA
+  43:  [4,3,2,3,1,0,4],     // EDCDBAE
+  44:  [0,4,1,2,2,3,3,4],   // AEBCCDDE
+  45:  [3,2,0,2,1,4,3],     // DCACBED
+  46:  [3,0,4,0,1,3,2],     // DAEABDC
+  47:  [2,0,1,3,4,3,2,0],   // CABDEDCA
+  48:  [1,0,4,4,2,3],       // BAEECD
+  49:  [1,0,0,4,3,2],       // BAAEDC
+  50:  [2,1,0,1,4,3,2],     // CBABEDC
+  51:  [1,2,3,0,4,2,1,4],   // BCDAECBE
+  52:  [1,1,3,0,0,4,2,3],   // BBDAAECD
+  53:  [4,0,1,2,3,0],       // EABCDA
+  54:  [2,0,2,3,4,1,3],     // CACDEBD
+  55:  [3,2,0,1,4,4,3],     // DCABEED
+  56:  [3,2,4,3,1,4,0,0],   // DCEDBEAA
+  57:  [1,2,3,0,0,3,4],     // BCDAADE
+  58:  [2,1,0,4,3,1,0],     // CBAEDBA
+  59:  [2,1,3,2,4,1,0],     // CBDCEBA
+  60:  [4,1,2,3,0,4,2,3],   // EBCDAECD
+  // === Seviye 4 (Test 61-80) ===
+  61:  [0,2,0,3,3,4,1,4],   // ACADDEBE
+  62:  [2,1,3,0,4,2,4,1],   // CBDAECEB
+  63:  [2,3,0,4,2,3,1,1],   // CDAECDBB
+  64:  [3,4,1,0,2,0],       // DEBACA
+  65:  [3,3,0,2,1,2,0,4],   // DDACBCAE
+  66:  [3,4,2,1,2,0,1,3],   // DECBCABD
+  67:  [3,2,0,3,1,4,2],     // DCADBEC
+  68:  [3,0,4,3,2,1,4],     // DAEDCBE
+  69:  [1,2,2,4,0,3,3,1],   // BCCEADDB
+  70:  [3,2,0,2,1,4,3],     // DCACBED
+  71:  [4,1,1,3,1,0,3,2],   // EBBDBADC
+  72:  [3,0,1,3,1,2,4],     // DABDBCE
+  73:  [1,2,3,3,4,0,2],     // BCDDEAC
+  74:  [3,1,0,1,3,2,4],     // DBABDCE
+  75:  [4,3,0,0,4,2,3,1],   // EDAAECDB
+  76:  [2,1,3,4,0,1,4,2],   // CBDEABEC
+  77:  [2,0,4,3,0,1,2,3],   // CAEDABCD
+  78:  [0,3,3,4,2,1,0,1],   // ADDECBAB
+  79:  [2,4,3,2,1,4,1,0],   // CEDCBEBA
+  80:  [4,2,3,4,1,3,2,0],   // ECDEBDCA
+  // === Seviye 5 (Test 81-100) ===
+  81:  [0,4,4,1,3,1,2,3],   // AEEBDBCD
+  82:  [0,4,3,1,1,2,2,3],   // AEDBBCCD
+  83:  [4,4,1,0,2,3,1,2],   // EEBACDBC
+  84:  [4,2,0,2,4,4,3,0],   // ECACEEDA
+  85:  [2,0,2,4,3,1,0,1],   // CACEDBAB
+  86:  [3,0,3,2,1,2,4,0],   // DADCBCEA
+  87:  [4,1,0,3,3,0,2],     // EBADDAC
+  88:  [0,3,4,1,4,1,3,2],   // ADEBEBDC
+  89:  [3,0,1,4,2,3,2,0],   // DABECDCA
+  90:  [2,1,4,4,0,3,3],     // CBEEADD
+  91:  [4,3,0,2,1,1,4,2],   // EDACBBEC
+  92:  [3,0,1,2,2,0,4,1],   // DABCCAEB
+  93:  [0,2,3,4,1,0,1,2],   // ACDEBABC
+  94:  [0,1,2,3,3,1,4],     // ABCDDBE
+  95:  [1,2,0,4,0,2,1,3],   // BCAEACBD
+  96:  [3,4,4,3,2,2,4,0],   // DEEDCCEA
+  97:  [3,1,2,2,1,3,4,0],   // DBCCBDEA
+  98:  [0,4,1,1,2,3],       // AEBBCD
+  99:  [1,0,1,3,3,2,4,2],   // BABDDCEC
+  100: [1,2,0,1,4,2,0],     // BCABECA
+  // === Seviye 6 (Test 101-120) ===
+  101: [2,1,1,2,0,4,3],     // CBBCAED
+  102: [2,1,3,1,2,3,4,0],   // CBDBCDEA
+  103: [0,3,3,4,2,1,4,0],   // ADDECBEA
+  104: [1,3,4,2,0,2,3,0],   // BDECACDA
+  105: [2,0,2,3,0,3,4,4],   // CACDADEE
+  106: [1,2,3,4,4,3,0],     // BCDEEDA
+  107: [0,4,3,1,2,1,3,0],   // AEDBCBDA
+  108: [1,3,0,4,2,3],       // BDAECD
+  109: [2,2,1,3,1,3,0,4],   // CCBDBDAE
+  110: [4,0,1,1,1,3,1,2],   // EABBBDBC
+  111: [2,2,1,3,0,4,4],     // CCBDAEE
+  112: [2,0,1,3,4,1,0,4],   // CABDEBAE
+  113: [3,4,3,2,0,2,0,1],   // DEDCACAB
+  114: [1,3,2,0,2,4,3,4],   // BDCACEDE
+  115: [3,1,0,2,4,3,0],     // DBACEDA
+  116: [2,4,1,2,3,0,0,4],   // CEBCDAAE
+  117: [1,3,4,3,4,1,0,2],   // BDEDEBAC
+  118: [0,2,4,1,3,4],       // ACEBDE
+  119: [2,2,1,4,3,0,3,0],   // CCBEDADA
+  120: [1,0,3,2,3,4,2],     // BADCDEC
+  // === Seviye 7 (Test 121-140) ===
+  121: [1,2,3,3,0,2,3],     // BCDDACD
+  122: [0,4,1,2,2,3],       // AEBCCD
+  123: [3,4,2,1,0,1,4,2],   // DECBABEC
+  124: [0,2,3,4,1,4,1,3],   // ACDEBEBD
+  125: [2,0,1,3,2,1,3,4],   // CABDCBDE
+  126: [1,4,0,3,3,1,2,4],   // BEADDBCE
+  127: [2,3,2,1,1,0,4],     // CDCBBAE
+  128: [4,4,0,2,3,1,1,2],   // EEACDBBC
+  129: [0,2,3,1,3,4,4,2],   // ACDBDEEC
+  130: [2,3,4,3,4,2,1],     // CDEDECB
+  131: [0,4,4,3,1,2,0,2],   // AEEDBCAC
+  132: [2,4,0,3,1,2,1],     // CEADBCB
+  133: [2,1,4,3,3,0,0],     // CBEDDAA
+  134: [1,3,1,2,0,4,1,0],   // BDBCAEBA
+  135: [4,0,1,3,2,2,1,0],   // EABDCCBA
+  136: [0,0,2,4,3,2,1,3,4], // AACEDCBDE
+  137: [0,2,4,1,2,4,3],     // ACEBCED
+  138: [0,3,1,0,1,2,4],     // ADBABCE
+  139: [1,0,2,4,2,4,3],     // BACECED
+  140: [1,3,4,1,4,2,0],     // BDEBECA
+  // === Seviye 8 (Test 141-160) ===
+  141: [1,2,3,0,0,3,2,4],   // BCDAADCE
+  142: [2,0,3,4,0,4,2,1],   // CADEAECB
+  143: [1,3,3,4,0,2,1],     // BDDEACB
+  144: [4,0,4,1,1,2,3,2],   // EAEBBCDC
+  145: [0,0,3,2,3,1,4],     // AADCDBE
+  146: [3,2,2,0,1,4,3,4],   // DCCABEDE
+  147: [2,0,4,1,1,3,0,2],   // CAEBBDAC
+  148: [3,4,4,1,3,3,0],     // DEEBDDA
+  149: [4,1,0,4,3,1,1,2],   // EBAEDBBC
+  150: [0,1,4,3,2,3,3],     // ABEDCDD
+  151: [4,0,0,1,2,3,3],     // EAABCDD
+  152: [1,1,4,2,2,0,3,1],   // BBECCADB
+  153: [1,2,0,4,4,1,3],     // BCAEEBD
+  154: [4,1,2,4,1,3,0,2],   // EBCEBDAC
+  155: [3,1,1,2,0,2,3],     // DBBCACD
+  156: [0,2,1,0,3,2,0,4],   // ACBADCAE
+  157: [3,4,4,0,1,2,2],     // DEEABCC
+  158: [4,3,3,2,2,0,1],     // EDDCCAB
+  159: [3,3,2,0,1,2,0,4],   // DDCABCAE
+  160: [0,0,4,4,1,1,3,2],   // AAEEBBDC
+};
+
 const RAW_MAPPINGS: RawMapping[] = [
   { testNo: 1, questionNo: 1, code: '21.5.4' },
   { testNo: 1, questionNo: 2, code: '21.5.6' },
@@ -1284,32 +1457,45 @@ async function main() {
   );
 
   let backfilledQuestions = 0;
-  // Known missing item: TEST 114 Q8 should exist with answer E.
-  const requiredQuestions = [{ testNo: 114, questionNo: 8, correctAnswerIndex: 4 }];
-  for (const item of requiredQuestions) {
-    const testId = testIdByOrdinal.get(item.testNo);
+  // Backfill all missing questions based on RAW_MAPPINGS (each question that has a mapping must exist)
+  const maxQByTestNo = new Map<number, number>();
+  for (const row of rows) {
+    const current = maxQByTestNo.get(row.testNo) ?? 0;
+    if (row.questionNo > current) maxQByTestNo.set(row.testNo, row.questionNo);
+  }
+
+  for (const [testNo, maxQ] of maxQByTestNo) {
+    const testId = testIdByOrdinal.get(testNo);
     if (!testId) continue;
 
-    const exists = await prisma.question.findFirst({
-      where: { testId, orderIndex: item.questionNo - 1 },
-      select: { id: true },
-    });
-
-    if (!exists) {
-      await prisma.question.create({
-        data: {
-          text: '',
-          optionA: 'A',
-          optionB: 'B',
-          optionC: 'C',
-          optionD: 'D',
-          optionE: 'E',
-          correctAnswerIndex: item.correctAnswerIndex,
-          orderIndex: item.questionNo - 1,
-          testId,
-        },
+    const answers = ANSWER_KEYS[testNo] ?? [];
+    for (let qNo = 1; qNo <= maxQ; qNo++) {
+      const correctAnswerIndex = qNo <= answers.length ? answers[qNo - 1] : 0;
+      const exists = await prisma.question.findFirst({
+        where: { testId, orderIndex: qNo - 1 },
+        select: { id: true },
       });
-      backfilledQuestions++;
+      if (!exists) {
+        await prisma.question.create({
+          data: {
+            text: '',
+            optionA: 'A',
+            optionB: 'B',
+            optionC: 'C',
+            optionD: 'D',
+            optionE: 'E',
+            correctAnswerIndex,
+            orderIndex: qNo - 1,
+            testId,
+          },
+        });
+        backfilledQuestions++;
+      } else {
+        await prisma.question.update({
+          where: { id: exists.id },
+          data: { correctAnswerIndex },
+        });
+      }
     }
   }
 

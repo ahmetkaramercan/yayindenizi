@@ -2,7 +2,6 @@ import { PrismaClient } from '@prisma/client';
 import * as path from 'path';
 import * as fs from 'fs';
 
-const prisma = new PrismaClient();
 // türkiye ilçe verileri
 interface DistrictJson {
   id: number;
@@ -15,7 +14,7 @@ interface CityJson {
   districts: DistrictJson[];
 }
 
-async function main() {
+export async function seedTurkey(prisma: PrismaClient) {
   const jsonPath = path.join(__dirname, 'Turkey.json');
   const raw = fs.readFileSync(jsonPath, 'utf-8');
   const data: CityJson[] = JSON.parse(raw);
@@ -51,11 +50,15 @@ async function main() {
   console.log(`✓ ${data.length} cities, ${totalDistricts} districts seeded`);
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Standalone script olarak çalıştırıldığında
+if (require.main === module) {
+  const prisma = new PrismaClient();
+  seedTurkey(prisma)
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}

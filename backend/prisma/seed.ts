@@ -1,9 +1,13 @@
 import { PrismaClient, Role, BookCategory } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { seedTurkey } from './seed-turkey';
 
 const prisma = new PrismaClient();
 
 async function main() {
+  // İl / İlçe verilerini seed et
+  await seedTurkey(prisma);
+
   const hashedPassword = await bcrypt.hash('password123', 10);
 
   // Admin
@@ -43,9 +47,11 @@ async function main() {
     },
   });
 
-  // Create a classroom for the teacher and add the student
-  const classroom = await prisma.classroom.create({
-    data: {
+  // Create a classroom for the teacher and add the student (idempotent)
+  const classroom = await prisma.classroom.upsert({
+    where: { code: 'ABCD1234' },
+    update: {},
+    create: {
       name: '9-A Türkçe',
       code: 'ABCD1234',
       teacherId: teacher.id,
@@ -55,66 +61,78 @@ async function main() {
     },
   });
 
-  // Learning outcomes (generic seed codes)
-  const outcomes = await Promise.all([
-    prisma.learningOutcome.create({ data: { code: 'SEED.1', name: 'Paragrafta Anlam', category: 'Paragraf', description: 'Paragrafın ana fikrini, yardımcı fikirlerini ve konusunu belirleme' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.2', name: 'Paragraf Yapısı', category: 'Paragraf', description: 'Paragrafın giriş, gelişme, sonuç bölümlerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.3', name: 'Paragraf Tamamlama', category: 'Paragraf', description: 'Paragrafı uygun cümlelerle tamamlama' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.4', name: 'Cümlede Anlam', category: 'Cümle', description: 'Cümlenin anlamını kavrama ve yorumlama' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.5', name: 'Cümle Yapısı', category: 'Cümle', description: 'Cümlenin yapısal özelliklerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.6', name: 'Cümle Tamamlama', category: 'Cümle', description: 'Cümleyi uygun sözcük veya ifadelerle tamamlama' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.7', name: 'Kelime Anlamı', category: 'Kelime', description: 'Sözcüklerin anlamlarını kavrama' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.8', name: 'Deyim ve Atasözü', category: 'Kelime', description: 'Deyim ve atasözlerini tanıma ve yorumlama' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.9', name: 'Ses Bilgisi', category: 'Dil Bilgisi', description: 'Ses olaylarını ve kurallarını bilme' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.10', name: 'Ekler', category: 'Dil Bilgisi', description: 'Yapım ve çekim eklerini tanıma' } }),
-    prisma.learningOutcome.create({ data: { code: 'SEED.11', name: 'Sözcük Türleri', category: 'Dil Bilgisi', description: 'Sözcük türlerini ayırt etme' } }),
-  ]);
+  // Learning outcomes (generic seed codes — idempotent)
+  const outcomeData = [
+    { code: 'SEED.1',  name: 'Paragrafta Anlam',  category: 'Paragraf',    description: 'Paragrafın ana fikrini, yardımcı fikirlerini ve konusunu belirleme' },
+    { code: 'SEED.2',  name: 'Paragraf Yapısı',   category: 'Paragraf',    description: 'Paragrafın giriş, gelişme, sonuç bölümlerini tanıma' },
+    { code: 'SEED.3',  name: 'Paragraf Tamamlama',category: 'Paragraf',    description: 'Paragrafı uygun cümlelerle tamamlama' },
+    { code: 'SEED.4',  name: 'Cümlede Anlam',     category: 'Cümle',       description: 'Cümlenin anlamını kavrama ve yorumlama' },
+    { code: 'SEED.5',  name: 'Cümle Yapısı',      category: 'Cümle',       description: 'Cümlenin yapısal özelliklerini tanıma' },
+    { code: 'SEED.6',  name: 'Cümle Tamamlama',   category: 'Cümle',       description: 'Cümleyi uygun sözcük veya ifadelerle tamamlama' },
+    { code: 'SEED.7',  name: 'Kelime Anlamı',     category: 'Kelime',      description: 'Sözcüklerin anlamlarını kavrama' },
+    { code: 'SEED.8',  name: 'Deyim ve Atasözü',  category: 'Kelime',      description: 'Deyim ve atasözlerini tanıma ve yorumlama' },
+    { code: 'SEED.9',  name: 'Ses Bilgisi',        category: 'Dil Bilgisi', description: 'Ses olaylarını ve kurallarını bilme' },
+    { code: 'SEED.10', name: 'Ekler',              category: 'Dil Bilgisi', description: 'Yapım ve çekim eklerini tanıma' },
+    { code: 'SEED.11', name: 'Sözcük Türleri',    category: 'Dil Bilgisi', description: 'Sözcük türlerini ayırt etme' },
+  ];
+  const outcomes = await Promise.all(
+    outcomeData.map(async (d) => {
+      const existing = await prisma.learningOutcome.findFirst({
+        where: { code: d.code, bookId: null },
+      });
+      if (existing) return existing;
+      return prisma.learningOutcome.create({ data: d });
+    }),
+  );
 
-  // Book → Section → Test → Question
-  const book = await prisma.book.create({
-    data: {
-      title: 'Paragraf Koçu',
-      description: 'TYT Paragraf çalışma kitabı',
-      category: BookCategory.PARAGRAF,
-      sections: {
-        create: [
-          {
-            title: 'Ana Fikir',
-            description: 'Paragrafın ana fikrini bulma',
-            orderIndex: 0,
-            tests: {
-              create: {
-                title: 'Ana Fikir Testi - Seviye 1',
-                level: 1,
-                timeLimit: 600,
-                questions: {
-                  create: [
-                    {
-                      text: 'Aşağıdaki paragrafın ana fikri nedir?\n\n"Kitap okumak, insanın hayal dünyasını genişletir. Farklı kültürleri, farklı yaşam biçimlerini tanımamızı sağlar. Okudukça dünyaya bakış açımız değişir ve zenginleşir."',
-                      optionA: 'A',
-                      optionB: 'B',
-                      optionC: 'C',
-                      optionD: 'D',
-                      optionE: 'E',
-                      correctAnswerIndex: 1,
-                      explanation: 'Paragrafta kitap okumanın hayal dünyasını genişlettiği, bakış açısını değiştirdiği vurgulanmaktadır.',
-                      orderIndex: 0,
-                      learningOutcomeId: outcomes[0].id,
-                    },
-                  ],
+  // Book → Section → Test → Question (idempotent)
+  let book = await prisma.book.findFirst({ where: { title: 'Paragraf Koçu' } });
+  if (!book) {
+    book = await prisma.book.create({
+      data: {
+        title: 'Paragraf Koçu',
+        description: 'TYT Paragraf çalışma kitabı',
+        category: BookCategory.PARAGRAF,
+        sections: {
+          create: [
+            {
+              title: 'Ana Fikir',
+              description: 'Paragrafın ana fikrini bulma',
+              orderIndex: 0,
+              tests: {
+                create: {
+                  title: 'Ana Fikir Testi - Seviye 1',
+                  level: 1,
+                  timeLimit: 600,
+                  questions: {
+                    create: [
+                      {
+                        text: 'Aşağıdaki paragrafın ana fikri nedir?\n\n"Kitap okumak, insanın hayal dünyasını genişletir. Farklı kültürleri, farklı yaşam biçimlerini tanımamızı sağlar. Okudukça dünyaya bakış açımız değişir ve zenginleşir."',
+                        optionA: 'A',
+                        optionB: 'B',
+                        optionC: 'C',
+                        optionD: 'D',
+                        optionE: 'E',
+                        correctAnswerIndex: 1,
+                        explanation: 'Paragrafta kitap okumanın hayal dünyasını genişlettiği, bakış açısını değiştirdiği vurgulanmaktadır.',
+                        orderIndex: 0,
+                        learningOutcomeId: outcomes[0].id,
+                      },
+                    ],
+                  },
                 },
               },
             },
-          },
-          {
-            title: 'Yardımcı Fikir',
-            description: 'Paragraftaki yardımcı fikirleri belirleme',
-            orderIndex: 1,
-          },
-        ],
+            {
+              title: 'Yardımcı Fikir',
+              description: 'Paragraftaki yardımcı fikirleri belirleme',
+              orderIndex: 1,
+            },
+          ],
+        },
       },
-    },
-  });
+    });
+  }
 
   console.log('Seed completed:', {
     admin: admin.id,
