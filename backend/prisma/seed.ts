@@ -85,61 +85,11 @@ async function main() {
     }),
   );
 
-  // Book → Section → Test → Question (idempotent)
-  let book = await prisma.book.findFirst({ where: { title: 'Paragraf Koçu' } });
-  if (!book) {
-    book = await prisma.book.create({
-      data: {
-        title: 'Paragraf Koçu',
-        description: 'TYT Paragraf çalışma kitabı',
-        category: BookCategory.PARAGRAF,
-        sections: {
-          create: [
-            {
-              title: 'Ana Fikir',
-              description: 'Paragrafın ana fikrini bulma',
-              orderIndex: 0,
-              tests: {
-                create: {
-                  title: 'Ana Fikir Testi - Seviye 1',
-                  level: 1,
-                  timeLimit: 600,
-                  questions: {
-                    create: [
-                      {
-                        text: 'Aşağıdaki paragrafın ana fikri nedir?\n\n"Kitap okumak, insanın hayal dünyasını genişletir. Farklı kültürleri, farklı yaşam biçimlerini tanımamızı sağlar. Okudukça dünyaya bakış açımız değişir ve zenginleşir."',
-                        optionA: 'A',
-                        optionB: 'B',
-                        optionC: 'C',
-                        optionD: 'D',
-                        optionE: 'E',
-                        correctAnswerIndex: 1,
-                        explanation: 'Paragrafta kitap okumanın hayal dünyasını genişlettiği, bakış açısını değiştirdiği vurgulanmaktadır.',
-                        orderIndex: 0,
-                        learningOutcomeId: outcomes[0].id,
-                      },
-                    ],
-                  },
-                },
-              },
-            },
-            {
-              title: 'Yardımcı Fikir',
-              description: 'Paragraftaki yardımcı fikirleri belirleme',
-              orderIndex: 1,
-            },
-          ],
-        },
-      },
-    });
-  }
-
   console.log('Seed completed:', {
     admin: admin.id,
     teacher: teacher.id,
     student: student.id,
     classroom: classroom.id,
-    book: book.id,
   });
 }
 

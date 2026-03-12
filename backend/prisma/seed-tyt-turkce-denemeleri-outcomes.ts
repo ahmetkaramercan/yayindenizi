@@ -70,6 +70,19 @@ const OUTCOMES: { code: string; name: string; category: string }[] = [
   { code: '21.18', name: 'ANLATIM BOZUKLUKLARI', category: 'Anlatım Bozuklukları' },
 ];
 
+import { RAW_MAPPINGS_TEXT } from './tyt-turkce-raw-mappings';
+
+type RawMapping = { testNo: number; questionNo: number; code: string };
+
+const RAW_MAPPINGS: RawMapping[] = RAW_MAPPINGS_TEXT.trim().split('\n').filter(Boolean).map(line => {
+  const [testStr, qNoStr, code] = line.split('\t');
+  return {
+    testNo: parseInt(testStr.replace('TEST ', ''), 10),
+    questionNo: parseInt(qNoStr, 10),
+    code: code.trim()
+  };
+});
+
 async function main() {
   console.log('Seeding TYT Türkçe Denemeleri - learning outcomes');
 
@@ -81,6 +94,20 @@ async function main() {
     throw new Error(`Book "${BOOK_TITLE}" not found. Run seed:tyt-turkce:structure first.`);
   }
   const bookId = book.id;
+
+  // Clear existing mappings
+  const deletedMappings = await prisma.questionOutcome.deleteMany({
+    where: {
+      question: {
+        test: {
+          section: {
+            bookId,
+          },
+        },
+      },
+    },
+  });
+  console.log(`✓ Removed ${deletedMappings.count} old mappings`);
 
   const deleted = await prisma.learningOutcome.deleteMany({ where: { bookId } });
   if (deleted.count > 0) console.log(`✓ Removed ${deleted.count} old outcomes`);
@@ -98,9 +125,91 @@ async function main() {
 
   console.log(`✓ ${OUTCOMES.length} learning outcomes created`);
 
+  // Create mappings
+  const outcomeMap = new Map(
+    (
+      await prisma.learningOutcome.findMany({
+        where: { bookId },
+        select: { id: true, code: true },
+      })
+    ).map((o: any) => [o.code, o.id]),
+  );
+
+  const orderedTests = await prisma.test.findMany({
+    where: { section: { bookId } },
+    select: { id: true, title: true },
+    orderBy: [{ createdAt: 'asc' }],
+  });
+
+  const testIdByNumber = new Map<number, string>(
+    orderedTests.map((t: any) => {
+      const match = t.title.match(/Deneme (\d+)/);
+      return [match ? parseInt(match[1]) : 0, t.id];
+    }),
+  );
+
+  let skipped = 0;
+  let createdMappings = 0;
+
+  for (const row of RAW_MAPPINGS) {
+    const outcomeId = outcomeMap.get(row.code);
+    if (!outcomeId) {
+      console.warn(`Outcome not found for code: ${row.code}`);
+      skipped++;
+      continue;
+    }
+
+    const testId = testIdByNumber.get(row.testNo);
+    if (!testId) {
+      console.warn(`Test not found for Deneme ${row.testNo}`);
+      skipped++;
+      continue;
+    }
+
+    const question = await prisma.question.findFirst({
+      where: {
+        testId,
+        orderIndex: row.questionNo - 1,
+      },
+      select: { id: true },
+    });
+
+    if (!question) {
+      console.warn(`Question not found for Deneme ${row.testNo}, Q ${row.questionNo}`);
+      skipped++;
+      continue;
+    }
+
+    await prisma.questionOutcome.upsert({
+      where: {
+        questionId_learningOutcomeId: {
+          questionId: question.id,
+          learningOutcomeId: outcomeId,
+        },
+      },
+      update: {},
+      create: {
+        questionId: question.id,
+        learningOutcomeId: outcomeId,
+      },
+    });
+    createdMappings++;
+  }
+
   console.log('\n=== VALIDATION ===');
   const count = await prisma.learningOutcome.count({ where: { bookId } });
+  const mappingCount = await prisma.questionOutcome.count({
+    where: {
+      question: {
+        test: {
+          section: { bookId },
+        },
+      },
+    },
+  });
   console.log(`Outcomes for "${BOOK_TITLE}": ${count}`);
+  console.log(`Mappings created: ${createdMappings} (Skipped: ${skipped})`);
+  console.log(`Total Mappings in DB for this book: ${mappingCount}`);
   console.log('✓ Done');
 }
 
