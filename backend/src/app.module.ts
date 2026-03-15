@@ -13,6 +13,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { ClassroomModule } from './modules/classroom/classroom.module';
 import { AnswersModule } from './modules/answers/answers.module';
 import { CitiesModule } from './modules/cities/cities.module';
+import { YoutubeModule } from './modules/youtube/youtube.module';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -31,6 +32,7 @@ import { RolesGuard } from './common/guards/roles.guard';
     ClassroomModule,
     AnswersModule,
     CitiesModule,
+    YoutubeModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

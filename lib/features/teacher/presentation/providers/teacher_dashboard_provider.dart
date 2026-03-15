@@ -3,6 +3,7 @@ import '../../../teacher/domain/entities/teacher.dart';
 import '../../../teacher/domain/entities/classroom.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../student/data/repositories/user_repository.dart';
+import '../../../auth/data/repositories/auth_repository.dart';
 import '../../data/repositories/classroom_repository.dart';
 
 class TeacherDashboardState {
@@ -48,7 +49,7 @@ class TeacherDashboardNotifier
       final teacher = await _userRepo.getTeacherProfile();
       state = state.copyWith(teacher: teacher);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
 
@@ -59,7 +60,7 @@ class TeacherDashboardNotifier
       final classrooms = await _classroomRepo.getMyClassrooms();
       state = state.copyWith(classrooms: classrooms, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: AuthRepository.extractError(e));
     }
   }
 
@@ -68,7 +69,19 @@ class TeacherDashboardNotifier
       final classroom = await _classroomRepo.createClassroom(name);
       state = state.copyWith(classrooms: [classroom, ...state.classrooms]);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: AuthRepository.extractError(e));
+    }
+  }
+
+  Future<void> renameClassroom(String classroomId, String name) async {
+    try {
+      final updated = await _classroomRepo.updateClassroom(classroomId, name);
+      final classrooms = state.classrooms
+          .map((c) => c.id == classroomId ? updated : c)
+          .toList();
+      state = state.copyWith(classrooms: classrooms);
+    } catch (e) {
+      state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
 
@@ -78,7 +91,7 @@ class TeacherDashboardNotifier
       final updated = state.classrooms.where((c) => c.id != classroomId).toList();
       state = state.copyWith(classrooms: updated);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
 }

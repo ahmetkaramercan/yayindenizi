@@ -80,12 +80,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 40),
                 // Logo
                 Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: Image.asset(
-                      'assets/images/logo/yayin_denizi_logo.jpeg',
-                      height: 160,
-                      fit: BoxFit.contain,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'photos/yayin_denizi_logo.jpeg',
+                        height: 160,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
@@ -190,4 +196,3 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 }
-

@@ -10,6 +10,10 @@ export const envValidationSchema = Joi.object({
     'string.empty': 'DATABASE_URL is required',
     'any.required': 'DATABASE_URL is required',
   }),
+  DIRECT_URL: Joi.string().uri().required().messages({
+    'string.empty': 'DIRECT_URL is required',
+    'any.required': 'DIRECT_URL is required',
+  }),
 
   // JWT
   JWT_SECRET: Joi.string().min(16).required().messages({

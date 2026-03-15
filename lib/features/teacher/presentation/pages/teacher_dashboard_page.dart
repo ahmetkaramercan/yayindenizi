@@ -12,11 +12,25 @@ import '../../../../core/di/injection_container.dart';
 import '../../../../core/providers/invalidate_user_providers.dart';
 import '../../../auth/data/repositories/auth_repository.dart';
 
-class TeacherDashboardPage extends ConsumerWidget {
+class TeacherDashboardPage extends ConsumerStatefulWidget {
   const TeacherDashboardPage({super.key});
 
-  Future<void> _showCreateClassroomDialog(
-      BuildContext context, WidgetRef ref) async {
+  @override
+  ConsumerState<TeacherDashboardPage> createState() =>
+      _TeacherDashboardPageState();
+}
+
+class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(teacherDashboardProvider.notifier).loadTeacherInfo();
+      ref.read(teacherDashboardProvider.notifier).loadClassrooms();
+    });
+  }
+
+  Future<void> _showCreateClassroomDialog() async {
     final controller = TextEditingController();
     await showDialog<void>(
       context: context,
@@ -40,9 +54,7 @@ class TeacherDashboardPage extends ConsumerWidget {
             onPressed: () {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                ref
-                    .read(teacherDashboardProvider.notifier)
-                    .addClassroom(name);
+                ref.read(teacherDashboardProvider.notifier).addClassroom(name);
                 Navigator.of(ctx).pop();
               }
             },
@@ -54,8 +66,68 @@ class TeacherDashboardPage extends ConsumerWidget {
     controller.dispose();
   }
 
+  Future<void> _showRenameDialog(String classroomId, String currentName) async {
+    final controller = TextEditingController(text: currentName);
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sınıfı Adlandır'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(labelText: 'Sınıf Adı'),
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = controller.text.trim();
+              Navigator.of(ctx).pop();
+              if (name.isNotEmpty && name != currentName) {
+                await ref
+                    .read(teacherDashboardProvider.notifier)
+                    .renameClassroom(classroomId, name);
+              }
+            },
+            child: const Text('Kaydet'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+  }
+
+  Future<void> _confirmDeleteClassroom(String classroomId, String name) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Sınıfı Sil'),
+        content: Text(
+            '"$name" sınıfını silmek istediğinizden emin misiniz? Tüm öğrenci kayıtları da silinecek.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      ref.read(teacherDashboardProvider.notifier).deleteClassroom(classroomId);
+    }
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final dashboardState = ref.watch(teacherDashboardProvider);
 
     return Scaffold(
@@ -78,7 +150,7 @@ class TeacherDashboardPage extends ConsumerWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateClassroomDialog(context, ref),
+        onPressed: _showCreateClassroomDialog,
         icon: const Icon(Icons.add),
         label: const Text('Sınıf Oluştur'),
       ),
@@ -176,7 +248,7 @@ class TeacherDashboardPage extends ConsumerWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryLight.withOpacity(0.2),
+                      color: AppColors.primaryLight.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
@@ -241,98 +313,121 @@ class TeacherDashboardPage extends ConsumerWidget {
                 )
               else
                 ...dashboardState.classrooms.map((classroom) => AppCard(
-                      margin:
-                          const EdgeInsets.only(bottom: AppConstants.paddingS),
+                      margin: const EdgeInsets.only(
+                          bottom: AppConstants.paddingS),
                       onTap: () {
                         context.push('/teacher/classroom/${classroom.id}');
                       },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: AppColors.primary,
-                                child: Icon(Icons.class_outlined,
-                                    color: AppColors.textOnPrimary),
+                          CircleAvatar(
+                            backgroundColor: AppColors.primary,
+                            child: Icon(Icons.class_outlined,
+                                color: AppColors.textOnPrimary),
+                          ),
+                          const SizedBox(width: AppConstants.paddingM),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  classroom.name,
+                                  style: AppTextStyles.h6.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${classroom.studentCount} öğrenci',
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Sınıf kodu chip'i (kopyalanabilir)
+                          GestureDetector(
+                            onTap: () {
+                              Clipboard.setData(
+                                  ClipboardData(text: classroom.code));
+                              context.showSnackBar('Sınıf kodu kopyalandı');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
                               ),
-                              const SizedBox(width: AppConstants.paddingM),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              decoration: BoxDecoration(
+                                color: AppColors.accent.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: AppColors.accent
+                                        .withValues(alpha: 0.4)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    classroom.code,
+                                    style: AppTextStyles.caption.copyWith(
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(Icons.copy,
+                                      size: 12,
+                                      color: AppColors.accent
+                                          .withValues(alpha: 0.7)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          // 3-nokta menüsü: Adlandır + Sil
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert),
+                            onSelected: (value) {
+                              if (value == 'rename') {
+                                _showRenameDialog(classroom.id, classroom.name);
+                              } else if (value == 'delete') {
+                                _confirmDeleteClassroom(
+                                    classroom.id, classroom.name);
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              const PopupMenuItem(
+                                value: 'rename',
+                                child: Row(
                                   children: [
-                                    Text(
-                                      classroom.name,
-                                      style: AppTextStyles.h6.copyWith(
-                                        color: AppColors.textPrimary,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${classroom.studentCount} öğrenci',
-                                      style: AppTextStyles.body2.copyWith(
-                                        color: AppColors.textSecondary,
-                                      ),
-                                    ),
+                                    Icon(Icons.edit_outlined, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Adlandır'),
                                   ],
                                 ),
                               ),
-                              // Sınıf kodu chip'i (kopyalanabilir)
-                              GestureDetector(
-                                onTap: () {
-                                  Clipboard.setData(
-                                      ClipboardData(text: classroom.code));
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text('Sınıf kodu kopyalandı'),
-                                      duration: Duration(seconds: 2),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 5,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        AppColors.accent.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                        color: AppColors.accent
-                                            .withOpacity(0.4)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        classroom.code,
-                                        style: AppTextStyles.caption.copyWith(
-                                          color: AppColors.accent,
-                                          fontWeight: FontWeight.w700,
-                                          letterSpacing: 1.5,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Icon(Icons.copy,
-                                          size: 12,
-                                          color: AppColors.accent
-                                              .withOpacity(0.7)),
-                                    ],
-                                  ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.delete_outline,
+                                        size: 18, color: AppColors.error),
+                                    const SizedBox(width: 8),
+                                    Text('Sil',
+                                        style: TextStyle(
+                                            color: AppColors.error)),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Icon(Icons.chevron_right,
-                                  color: AppColors.textSecondary),
                             ],
                           ),
                         ],
                       ),
                     )),
-              // FAB için boşluk bırak
+              // FAB için boşluk
               const SizedBox(height: 80),
             ],
           ),

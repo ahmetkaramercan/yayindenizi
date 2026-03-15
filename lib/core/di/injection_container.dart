@@ -8,7 +8,6 @@ import '../../features/student/data/repositories/book_repository.dart';
 import '../../features/student/data/repositories/test_repository.dart';
 import '../../features/student/data/repositories/analytics_repository.dart';
 import '../../features/student/data/repositories/user_repository.dart';
-import '../../features/teacher/data/repositories/relation_repository.dart';
 import '../../features/teacher/data/repositories/classroom_repository.dart';
 
 final sl = GetIt.instance;
@@ -38,9 +37,6 @@ Future<void> init() async {
   );
   sl.registerLazySingleton<UserRepository>(
     () => UserRepository(sl<ApiClient>()),
-  );
-  sl.registerLazySingleton<RelationRepository>(
-    () => RelationRepository(sl<ApiClient>()),
   );
   sl.registerLazySingleton<ClassroomRepository>(
     () => ClassroomRepository(sl<ApiClient>()),

@@ -114,7 +114,9 @@ class AuthRepository {
         if (msg is String) return msg;
       }
       if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
+          e.type == DioExceptionType.receiveTimeout ||
+          e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown) {
         return 'Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.';
       }
     }

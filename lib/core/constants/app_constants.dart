@@ -9,9 +9,11 @@ class AppConstants {
   static const String userTypeStudent = 'student';
   static const String userTypeTeacher = 'teacher';
 
-  // iOS Simulator (localhost doğrudan çalışır)
-  static const String baseUrl = 'http://localhost:3000/api/v1';
-  // Android Emulator (10.0.2.2 = host makinenin localhost'u)
+  // Production (Fly.io)
+  static const String baseUrl = 'https://yayindenizi-backend.fly.dev/api/v1';
+  // Geliştirme - iOS Simulator
+  // static const String baseUrl = 'http://localhost:3000/api/v1';
+  // Geliştirme - Android Emulator
   // static const String baseUrl = 'http://10.0.2.2:3000/api/v1';
 
   // Timeout süreleri

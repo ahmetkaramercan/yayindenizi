@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../teacher/domain/entities/classroom.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../teacher/data/repositories/classroom_repository.dart';
+import '../../../auth/data/repositories/auth_repository.dart';
 
 class StudentDashboardState {
   final List<Classroom> classrooms;
@@ -41,7 +42,7 @@ class StudentDashboardNotifier extends StateNotifier<StudentDashboardState> {
       final classrooms = await _classroomRepo.getStudentClassrooms();
       state = state.copyWith(classrooms: classrooms, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: AuthRepository.extractError(e));
     }
   }
 
@@ -51,7 +52,7 @@ class StudentDashboardNotifier extends StateNotifier<StudentDashboardState> {
       final updated = state.classrooms.where((c) => c.id != classroomId).toList();
       state = state.copyWith(classrooms: updated);
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
 }

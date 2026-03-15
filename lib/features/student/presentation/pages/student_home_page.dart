@@ -193,8 +193,7 @@ class StudentHomePage extends ConsumerWidget {
                       text: 'Rehberlik',
                       icon: Icons.school_outlined,
                       onPressed: () {
-                        // TODO: Rehberlik sayfasına yönlendir
-                        context.showSnackBar('Rehberlik sayfası yakında...');
+                        context.push('/student/rehberlik');
                       },
                       type: AppButtonType.outline,
                       isFullWidth: true,

@@ -49,8 +49,8 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(appConfig.port);
-  logger.log(`Application running on http://localhost:${appConfig.port}/api/v1`);
+  await app.listen(appConfig.port, '0.0.0.0');
+  logger.log(`Application running on http://0.0.0.0:${appConfig.port}/api/v1`);
   logger.log(`Swagger docs at http://localhost:${appConfig.port}/api/docs`);
 }
 

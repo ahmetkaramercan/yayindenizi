@@ -28,6 +28,14 @@ class _StudentDashboardPageState extends ConsumerState<StudentDashboardPage> {
   final _classroomCodeController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(studentDashboardProvider.notifier).loadClassrooms();
+    });
+  }
+
+  @override
   void dispose() {
     _classroomCodeController.dispose();
     super.dispose();
