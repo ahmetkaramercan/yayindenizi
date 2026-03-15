@@ -31,74 +31,33 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
   }
 
   Future<void> _showCreateClassroomDialog() async {
-    final controller = TextEditingController();
-    await showDialog<void>(
+    final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Yeni Sınıf Oluştur'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'Sınıf Adı',
-            hintText: 'Örn: 9-A Türkçe',
-          ),
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              final name = controller.text.trim();
-              if (name.isNotEmpty) {
-                ref.read(teacherDashboardProvider.notifier).addClassroom(name);
-                Navigator.of(ctx).pop();
-              }
-            },
-            child: const Text('Oluştur'),
-          ),
-        ],
+      builder: (ctx) => const _ClassroomNameDialog(
+        title: 'Yeni Sınıf Oluştur',
+        hint: 'Örn: 9-A Türkçe',
+        confirmLabel: 'Oluştur',
       ),
     );
-    controller.dispose();
+    if (name != null && mounted) {
+      ref.read(teacherDashboardProvider.notifier).addClassroom(name);
+    }
   }
 
   Future<void> _showRenameDialog(String classroomId, String currentName) async {
-    final controller = TextEditingController(text: currentName);
-    await showDialog<void>(
+    final name = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sınıfı Adlandır'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(labelText: 'Sınıf Adı'),
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final name = controller.text.trim();
-              Navigator.of(ctx).pop();
-              if (name.isNotEmpty && name != currentName) {
-                await ref
-                    .read(teacherDashboardProvider.notifier)
-                    .renameClassroom(classroomId, name);
-              }
-            },
-            child: const Text('Kaydet'),
-          ),
-        ],
+      builder: (ctx) => _ClassroomNameDialog(
+        title: 'Sınıfı Adlandır',
+        initialValue: currentName,
+        confirmLabel: 'Kaydet',
       ),
     );
-    controller.dispose();
+    if (name != null && name.isNotEmpty && name != currentName && mounted) {
+      await ref
+          .read(teacherDashboardProvider.notifier)
+          .renameClassroom(classroomId, name);
+    }
   }
 
   Future<void> _confirmDeleteClassroom(String classroomId, String name) async {
@@ -313,8 +272,8 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
                 )
               else
                 ...dashboardState.classrooms.map((classroom) => AppCard(
-                      margin: const EdgeInsets.only(
-                          bottom: AppConstants.paddingS),
+                      margin:
+                          const EdgeInsets.only(bottom: AppConstants.paddingS),
                       onTap: () {
                         context.push('/teacher/classroom/${classroom.id}');
                       },
@@ -417,8 +376,8 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
                                         size: 18, color: AppColors.error),
                                     const SizedBox(width: 8),
                                     Text('Sil',
-                                        style: TextStyle(
-                                            color: AppColors.error)),
+                                        style:
+                                            TextStyle(color: AppColors.error)),
                                   ],
                                 ),
                               ),
@@ -433,6 +392,73 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─── Sınıf adı dialog widget'ı ────────────────────────────────────────────────
+class _ClassroomNameDialog extends StatefulWidget {
+  final String title;
+  final String? initialValue;
+  final String? hint;
+  final String confirmLabel;
+
+  const _ClassroomNameDialog({
+    required this.title,
+    this.initialValue,
+    this.hint,
+    required this.confirmLabel,
+  });
+
+  @override
+  State<_ClassroomNameDialog> createState() => _ClassroomNameDialogState();
+}
+
+class _ClassroomNameDialogState extends State<_ClassroomNameDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: TextField(
+        controller: _controller,
+        decoration: InputDecoration(
+          labelText: 'Sınıf Adı',
+          hintText: widget.hint,
+        ),
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        onSubmitted: (value) {
+          final name = value.trim();
+          if (name.isNotEmpty) Navigator.of(context).pop(name);
+        },
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('İptal'),
+        ),
+        TextButton(
+          onPressed: () {
+            final name = _controller.text.trim();
+            if (name.isNotEmpty) Navigator.of(context).pop(name);
+          },
+          child: Text(widget.confirmLabel),
+        ),
+      ],
     );
   }
 }

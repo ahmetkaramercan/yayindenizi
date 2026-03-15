@@ -88,8 +88,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: Image.asset(
-                        'photos/yayin_denizi_logo.jpeg',
-                        height: 160,
+                        'assets/images/logo/yayin_denizi_logo.jpeg',
+                        height: 200,
                         fit: BoxFit.contain,
                       ),
                     ),
@@ -148,6 +148,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // Register Options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
                       'Hesabınız yok mu? ',
@@ -169,6 +171,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
                       'Öğretmen misiniz? ',

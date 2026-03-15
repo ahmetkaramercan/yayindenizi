@@ -9,11 +9,78 @@ import '../../../../../../core/constants/app_constants.dart';
 import '../../../domain/entities/test_result.dart';
 import '../../providers/test_provider.dart';
 
-class AnalysisPage extends ConsumerWidget {
+enum AnalysisSortOrder {
+  mostWrong,
+  mostCorrect,
+  alphabetical,
+}
+
+extension AnalysisSortOrderLabel on AnalysisSortOrder {
+  String get label {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return 'En Çok Yanlış';
+      case AnalysisSortOrder.mostCorrect:
+        return 'En Çok Doğru';
+      case AnalysisSortOrder.alphabetical:
+        return 'Alfabetik';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return Icons.cancel_outlined;
+      case AnalysisSortOrder.mostCorrect:
+        return Icons.check_circle_outline;
+      case AnalysisSortOrder.alphabetical:
+        return Icons.sort_by_alpha;
+    }
+  }
+}
+
+class AnalysisPage extends ConsumerStatefulWidget {
   const AnalysisPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalysisPage> createState() => _AnalysisPageState();
+}
+
+class _AnalysisPageState extends ConsumerState<AnalysisPage> {
+  AnalysisSortOrder _sortOrder = AnalysisSortOrder.mostWrong;
+
+  List<LearningOutcomeStats> _sorted(List<LearningOutcomeStats> list) {
+    final sorted = List<LearningOutcomeStats>.from(list);
+    switch (_sortOrder) {
+      case AnalysisSortOrder.mostWrong:
+        sorted.sort((a, b) {
+          final aRate =
+              a.totalQuestions > 0 ? a.wrongAnswers / a.totalQuestions : 0.0;
+          final bRate =
+              b.totalQuestions > 0 ? b.wrongAnswers / b.totalQuestions : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.mostCorrect:
+        sorted.sort((a, b) {
+          final aRate =
+              a.totalQuestions > 0 ? a.correctAnswers / a.totalQuestions : 0.0;
+          final bRate =
+              b.totalQuestions > 0 ? b.correctAnswers / b.totalQuestions : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.alphabetical:
+        sorted.sort((a, b) => a.learningOutcome.name
+            .toLowerCase()
+            .compareTo(b.learningOutcome.name.toLowerCase()));
+        break;
+    }
+    return sorted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final testState = ref.watch(testProvider);
     final result = testState.testResult;
 
@@ -27,6 +94,8 @@ class AnalysisPage extends ConsumerWidget {
         ),
       );
     }
+
+    final sortedStats = _sorted(result.learningOutcomeStats);
 
     return Scaffold(
       appBar: AppBar(
@@ -73,7 +142,8 @@ class AnalysisPage extends ConsumerWidget {
                             Text(
                               '${result.successPercentage.toInt()}%',
                               style: AppTextStyles.h3.copyWith(
-                                color: _getSuccessColor(result.successPercentage),
+                                color:
+                                    _getSuccessColor(result.successPercentage),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -113,16 +183,26 @@ class AnalysisPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppConstants.paddingL),
-            // Kazanım Bazlı Analiz
-            Text(
-              'Kazanım Bazlı Analiz',
-              style: AppTextStyles.h5.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+            // Kazanım Bazlı Analiz başlığı + sıralama
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Kazanım Bazlı Analiz',
+                    style: AppTextStyles.h5.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                _SortMenuButton(
+                  current: _sortOrder,
+                  onSelected: (order) => setState(() => _sortOrder = order),
+                ),
+              ],
             ),
             const SizedBox(height: AppConstants.paddingM),
-            ...result.learningOutcomeStats.map((stats) => _LearningOutcomeCard(
+            ...sortedStats.map((stats) => _LearningOutcomeCard(
                   stats: stats,
                 )),
             const SizedBox(height: AppConstants.paddingL),
@@ -159,6 +239,85 @@ class AnalysisPage extends ConsumerWidget {
     if (percentage >= 60) return AppColors.info;
     if (percentage >= 40) return AppColors.warning;
     return AppColors.error;
+  }
+}
+
+class _SortMenuButton extends StatelessWidget {
+  final AnalysisSortOrder current;
+  final ValueChanged<AnalysisSortOrder> onSelected;
+
+  const _SortMenuButton({
+    required this.current,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<AnalysisSortOrder>(
+      onSelected: onSelected,
+      tooltip: 'Sıralama',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      ),
+      itemBuilder: (context) => AnalysisSortOrder.values
+          .map(
+            (order) => PopupMenuItem<AnalysisSortOrder>(
+              value: order,
+              child: Row(
+                children: [
+                  Icon(
+                    order.icon,
+                    size: 18,
+                    color: current == order
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    order.label,
+                    style: AppTextStyles.body2.copyWith(
+                      color: current == order
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: current == order
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  if (current == order) ...[
+                    const Spacer(),
+                    Icon(Icons.check, size: 16, color: AppColors.primary),
+                  ],
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(current.icon, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(
+              current.label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -224,7 +383,6 @@ class _LearningOutcomeCard extends StatelessWidget {
               ),
               Row(
                 children: [
-                  // Tamamlanma yüzdesi (her zaman %100 çünkü test tamamlandı)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -243,7 +401,6 @@ class _LearningOutcomeCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Başarı yüzdesi
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -276,7 +433,6 @@ class _LearningOutcomeCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          // Progress Bar
           LinearProgressIndicator(
             value: stats.successPercentage / 100,
             backgroundColor: AppColors.border,
@@ -285,7 +441,6 @@ class _LearningOutcomeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Detaylı İstatistikler
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -362,4 +517,3 @@ class _DetailStat extends StatelessWidget {
     );
   }
 }
-

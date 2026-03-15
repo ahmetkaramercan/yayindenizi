@@ -7,8 +7,39 @@ import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
 import '../../../../../../core/constants/app_constants.dart';
 import '../../providers/topic_provider.dart';
+import '../../../domain/entities/topic_test_result.dart';
 
-class TopicAnalysisPage extends ConsumerWidget {
+enum AnalysisSortOrder {
+  mostWrong,
+  mostCorrect,
+  alphabetical,
+}
+
+extension AnalysisSortOrderLabel on AnalysisSortOrder {
+  String get label {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return 'En Çok Yanlış';
+      case AnalysisSortOrder.mostCorrect:
+        return 'En Çok Doğru';
+      case AnalysisSortOrder.alphabetical:
+        return 'Alfabetik';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return Icons.cancel_outlined;
+      case AnalysisSortOrder.mostCorrect:
+        return Icons.check_circle_outline;
+      case AnalysisSortOrder.alphabetical:
+        return Icons.sort_by_alpha;
+    }
+  }
+}
+
+class TopicAnalysisPage extends ConsumerStatefulWidget {
   final String topicId;
 
   const TopicAnalysisPage({
@@ -17,7 +48,45 @@ class TopicAnalysisPage extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TopicAnalysisPage> createState() => _TopicAnalysisPageState();
+}
+
+class _TopicAnalysisPageState extends ConsumerState<TopicAnalysisPage> {
+  AnalysisSortOrder _sortOrder = AnalysisSortOrder.mostWrong;
+
+  List<TopicLearningOutcomeStats> _sorted(
+      List<TopicLearningOutcomeStats> list) {
+    final sorted = List<TopicLearningOutcomeStats>.from(list);
+    switch (_sortOrder) {
+      case AnalysisSortOrder.mostWrong:
+        sorted.sort((a, b) {
+          final aRate =
+              a.totalQuestions > 0 ? a.wrongAnswers / a.totalQuestions : 0.0;
+          final bRate =
+              b.totalQuestions > 0 ? b.wrongAnswers / b.totalQuestions : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.mostCorrect:
+        sorted.sort((a, b) {
+          final aRate =
+              a.totalQuestions > 0 ? a.correctAnswers / a.totalQuestions : 0.0;
+          final bRate =
+              b.totalQuestions > 0 ? b.correctAnswers / b.totalQuestions : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.alphabetical:
+        sorted.sort((a, b) => a.learningOutcome.name
+            .toLowerCase()
+            .compareTo(b.learningOutcome.name.toLowerCase()));
+        break;
+    }
+    return sorted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final topicState = ref.watch(topicProvider);
     final analysis = topicState.topicAnalysis;
 
@@ -31,7 +100,7 @@ class TopicAnalysisPage extends ConsumerWidget {
       ),
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.read(topicProvider.notifier).loadTopicAnalysis(topicId);
+          ref.read(topicProvider.notifier).loadTopicAnalysis(widget.topicId);
         },
         child: topicState.isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -117,17 +186,29 @@ class TopicAnalysisPage extends ConsumerWidget {
                               ),
                               const SizedBox(height: AppConstants.paddingL),
                             ],
-                            // Kazanım Analizi Başlığı
-                            Text(
-                              'Kazanım Bazlı Analiz',
-                              style: AppTextStyles.h5.copyWith(
-                                color: AppColors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            // Kazanım Analizi Başlığı + Sıralama
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Kazanım Bazlı Analiz',
+                                    style: AppTextStyles.h5.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                _SortMenuButton(
+                                  current: _sortOrder,
+                                  onSelected: (order) =>
+                                      setState(() => _sortOrder = order),
+                                ),
+                              ],
                             ),
                             const SizedBox(height: AppConstants.paddingM),
                             // Kazanım Kartları
-                            ...analysis.values.map((stats) => AppCard(
+                            ..._sorted(analysis.values.toList()).map((stats) =>
+                                AppCard(
                                   margin: const EdgeInsets.only(
                                     bottom: AppConstants.paddingM,
                                   ),
@@ -150,7 +231,7 @@ class TopicAnalysisPage extends ConsumerWidget {
                                           ),
                                           Row(
                                             children: [
-                                              // Tamamlanma yüzdesi (konu için tüm testler tamamlandıysa %100)
+                                              // Tamamlanma yüzdesi
                                               Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
@@ -182,7 +263,8 @@ class TopicAnalysisPage extends ConsumerWidget {
                                                 ),
                                                 decoration: BoxDecoration(
                                                   color: _getPercentageColor(
-                                                          stats.successPercentage)
+                                                          stats
+                                                              .successPercentage)
                                                       .withOpacity(0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(16),
@@ -192,7 +274,8 @@ class TopicAnalysisPage extends ConsumerWidget {
                                                   style: AppTextStyles.body2
                                                       .copyWith(
                                                     color: _getPercentageColor(
-                                                        stats.successPercentage),
+                                                        stats
+                                                            .successPercentage),
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -206,8 +289,7 @@ class TopicAnalysisPage extends ConsumerWidget {
                                         const SizedBox(height: 8),
                                         Text(
                                           stats.learningOutcome.description!,
-                                          style: AppTextStyles.caption
-                                              .copyWith(
+                                          style: AppTextStyles.caption.copyWith(
                                             color: AppColors.textSecondary,
                                           ),
                                         ),
@@ -215,31 +297,40 @@ class TopicAnalysisPage extends ConsumerWidget {
                                       const SizedBox(height: 16),
                                       // Başarı Progress Bar
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(
                                                 'Başarı',
-                                                style: AppTextStyles.caption.copyWith(
-                                                  color: AppColors.textSecondary,
+                                                style: AppTextStyles.caption
+                                                    .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
                                                 ),
                                               ),
                                               Text(
                                                 '${stats.correctAnswers}/${stats.totalQuestions}',
-                                                style: AppTextStyles.caption.copyWith(
-                                                  color: AppColors.textSecondary,
+                                                style: AppTextStyles.caption
+                                                    .copyWith(
+                                                  color:
+                                                      AppColors.textSecondary,
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 4),
                                           LinearProgressIndicator(
-                                            value: stats.successPercentage / 100,
+                                            value:
+                                                stats.successPercentage / 100,
                                             backgroundColor: AppColors.border,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                              _getPercentageColor(stats.successPercentage),
+                                            valueColor:
+                                                AlwaysStoppedAnimation<Color>(
+                                              _getPercentageColor(
+                                                  stats.successPercentage),
                                             ),
                                           ),
                                         ],
@@ -298,6 +389,85 @@ class TopicAnalysisPage extends ConsumerWidget {
   }
 }
 
+class _SortMenuButton extends StatelessWidget {
+  final AnalysisSortOrder current;
+  final ValueChanged<AnalysisSortOrder> onSelected;
+
+  const _SortMenuButton({
+    required this.current,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<AnalysisSortOrder>(
+      onSelected: onSelected,
+      tooltip: 'Sıralama',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      ),
+      itemBuilder: (context) => AnalysisSortOrder.values
+          .map(
+            (order) => PopupMenuItem<AnalysisSortOrder>(
+              value: order,
+              child: Row(
+                children: [
+                  Icon(
+                    order.icon,
+                    size: 18,
+                    color: current == order
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    order.label,
+                    style: AppTextStyles.body2.copyWith(
+                      color: current == order
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: current == order
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  if (current == order) ...[
+                    const Spacer(),
+                    Icon(Icons.check, size: 16, color: AppColors.primary),
+                  ],
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(current.icon, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(
+              current.label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _DetailStatItem extends StatelessWidget {
   final String label;
   final String value;
@@ -339,4 +509,3 @@ class _DetailStatItem extends StatelessWidget {
     );
   }
 }
-

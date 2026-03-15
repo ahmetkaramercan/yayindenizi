@@ -14,6 +14,37 @@ import '../providers/teacher_student_detail_provider.dart';
 import '../providers/teacher_student_analysis_provider.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../../student/data/repositories/book_repository.dart';
+import '../../../../core/utils/book_utils.dart';
+
+enum AnalysisSortOrder {
+  mostWrong,
+  mostCorrect,
+  alphabetical,
+}
+
+extension AnalysisSortOrderLabel on AnalysisSortOrder {
+  String get label {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return 'En Çok Yanlış';
+      case AnalysisSortOrder.mostCorrect:
+        return 'En Çok Doğru';
+      case AnalysisSortOrder.alphabetical:
+        return 'Alfabetik';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return Icons.cancel_outlined;
+      case AnalysisSortOrder.mostCorrect:
+        return Icons.check_circle_outline;
+      case AnalysisSortOrder.alphabetical:
+        return Icons.sort_by_alpha;
+    }
+  }
+}
 
 class StudentDetailPage extends ConsumerStatefulWidget {
   final String studentId;
@@ -32,6 +63,41 @@ class StudentDetailPage extends ConsumerStatefulWidget {
 class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
   String? _selectedBookId;
   List<Book> _books = [];
+  AnalysisSortOrder _sortOrder = AnalysisSortOrder.mostWrong;
+
+  List<LearningOutcomeProgress> _sorted(List<LearningOutcomeProgress> list) {
+    final sorted = List<LearningOutcomeProgress>.from(list);
+    switch (_sortOrder) {
+      case AnalysisSortOrder.mostWrong:
+        sorted.sort((a, b) {
+          final aRate = a.completedQuestions > 0
+              ? a.incorrectAnswers / a.completedQuestions
+              : 0.0;
+          final bRate = b.completedQuestions > 0
+              ? b.incorrectAnswers / b.completedQuestions
+              : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.mostCorrect:
+        sorted.sort((a, b) {
+          final aRate = a.completedQuestions > 0
+              ? a.correctAnswers / a.completedQuestions
+              : 0.0;
+          final bRate = b.completedQuestions > 0
+              ? b.correctAnswers / b.completedQuestions
+              : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.alphabetical:
+        sorted.sort((a, b) => a.learningOutcome.name
+            .toLowerCase()
+            .compareTo(b.learningOutcome.name.toLowerCase()));
+        break;
+    }
+    return sorted;
+  }
 
   @override
   void initState() {
@@ -42,12 +108,14 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
   Future<void> _loadBooks() async {
     final repo = sl<BookRepository>();
     final books = await repo.getBooks();
+    BookUtils.sortBooks(books);
     if (mounted) setState(() => _books = books);
   }
 
   @override
   Widget build(BuildContext context) {
-    final detailState = ref.watch(teacherStudentDetailProvider((widget.classroomId, widget.studentId)));
+    final detailState = ref.watch(
+        teacherStudentDetailProvider((widget.classroomId, widget.studentId)));
     final analysisState = ref.watch(teacherStudentAnalysisProvider);
 
     return Scaffold(
@@ -65,7 +133,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
       body: RefreshIndicator(
         onRefresh: () async {
           await ref
-              .read(teacherStudentDetailProvider((widget.classroomId, widget.studentId)).notifier)
+              .read(teacherStudentDetailProvider(
+                  (widget.classroomId, widget.studentId)).notifier)
               .loadData();
           if (_selectedBookId != null) {
             ref
@@ -143,10 +212,13 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                                               color: AppColors.textSecondary,
                                             ),
                                           ),
-                                          if (detailState.student!.locationDisplay != null) ...[
+                                          if (detailState
+                                                  .student!.locationDisplay !=
+                                              null) ...[
                                             const SizedBox(height: 4),
                                             Text(
-                                              detailState.student!.locationDisplay!,
+                                              detailState
+                                                  .student!.locationDisplay!,
                                               style: AppTextStyles.caption
                                                   .copyWith(
                                                 color: AppColors.textSecondary,
@@ -292,7 +364,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                             ),
                           )
                         else if (analysisState.analysis == null ||
-                            analysisState.analysis!.learningOutcomeProgress.isEmpty)
+                            analysisState
+                                .analysis!.learningOutcomeProgress.isEmpty)
                           AppCard(
                             child: Column(
                               children: [
@@ -369,22 +442,32 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                             ),
                           ),
                           const SizedBox(height: AppConstants.paddingL),
-                          Text(
-                            'Kazanım Bazlı Analiz',
-                            style: AppTextStyles.h5.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  'Kazanım Bazlı Analiz',
+                                  style: AppTextStyles.h5.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              _SortMenuButton(
+                                current: _sortOrder,
+                                onSelected: (order) =>
+                                    setState(() => _sortOrder = order),
+                              ),
+                            ],
                           ),
                           const SizedBox(height: AppConstants.paddingM),
-                          ...(analysisState.analysis!.learningOutcomeProgress
-                                  .values
-                                  .toList()
-                                ..sort((a, b) => b.completedQuestions
-                                    .compareTo(a.completedQuestions)))
-                              .map((progress) => _LearningOutcomeCard(
-                                    progress: progress,
-                                  )),
+                          ..._sorted(
+                            analysisState
+                                .analysis!.learningOutcomeProgress.values
+                                .toList(),
+                          ).map((progress) => _LearningOutcomeCard(
+                                progress: progress,
+                              )),
                           const SizedBox(height: AppConstants.paddingL),
                         ],
                         // Test Geçmişi
@@ -591,7 +674,8 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
             text: 'Sil',
             onPressed: () {
               ref
-                  .read(teacherStudentDetailProvider((widget.classroomId, widget.studentId)).notifier)
+                  .read(teacherStudentDetailProvider(
+                      (widget.classroomId, widget.studentId)).notifier)
                   .removeStudent();
               Navigator.of(context).pop();
               context.pop();
@@ -623,6 +707,85 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
 
   String _formatDate(DateTime date) {
     return '${date.day}.${date.month}.${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
+}
+
+class _SortMenuButton extends StatelessWidget {
+  final AnalysisSortOrder current;
+  final ValueChanged<AnalysisSortOrder> onSelected;
+
+  const _SortMenuButton({
+    required this.current,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<AnalysisSortOrder>(
+      onSelected: onSelected,
+      tooltip: 'Sıralama',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      ),
+      itemBuilder: (context) => AnalysisSortOrder.values
+          .map(
+            (order) => PopupMenuItem<AnalysisSortOrder>(
+              value: order,
+              child: Row(
+                children: [
+                  Icon(
+                    order.icon,
+                    size: 18,
+                    color: current == order
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    order.label,
+                    style: AppTextStyles.body2.copyWith(
+                      color: current == order
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: current == order
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  if (current == order) ...[
+                    const Spacer(),
+                    Icon(Icons.check, size: 16, color: AppColors.primary),
+                  ],
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(current.icon, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(
+              current.label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -34,8 +34,7 @@ class TeacherDashboardState {
   }
 }
 
-class TeacherDashboardNotifier
-    extends StateNotifier<TeacherDashboardState> {
+class TeacherDashboardNotifier extends StateNotifier<TeacherDashboardState> {
   TeacherDashboardNotifier() : super(TeacherDashboardState()) {
     loadTeacherInfo();
     loadClassrooms();
@@ -47,8 +46,10 @@ class TeacherDashboardNotifier
   Future<void> loadTeacherInfo() async {
     try {
       final teacher = await _userRepo.getTeacherProfile();
+      if (!mounted) return;
       state = state.copyWith(teacher: teacher);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
@@ -58,17 +59,22 @@ class TeacherDashboardNotifier
 
     try {
       final classrooms = await _classroomRepo.getMyClassrooms();
+      if (!mounted) return;
       state = state.copyWith(classrooms: classrooms, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: AuthRepository.extractError(e));
+      if (!mounted) return;
+      state = state.copyWith(
+          isLoading: false, error: AuthRepository.extractError(e));
     }
   }
 
   Future<void> addClassroom(String name) async {
     try {
       final classroom = await _classroomRepo.createClassroom(name);
+      if (!mounted) return;
       state = state.copyWith(classrooms: [classroom, ...state.classrooms]);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
@@ -76,11 +82,13 @@ class TeacherDashboardNotifier
   Future<void> renameClassroom(String classroomId, String name) async {
     try {
       final updated = await _classroomRepo.updateClassroom(classroomId, name);
+      if (!mounted) return;
       final classrooms = state.classrooms
           .map((c) => c.id == classroomId ? updated : c)
           .toList();
       state = state.copyWith(classrooms: classrooms);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }
@@ -88,9 +96,12 @@ class TeacherDashboardNotifier
   Future<void> deleteClassroom(String classroomId) async {
     try {
       await _classroomRepo.deleteClassroom(classroomId);
-      final updated = state.classrooms.where((c) => c.id != classroomId).toList();
+      if (!mounted) return;
+      final updated =
+          state.classrooms.where((c) => c.id != classroomId).toList();
       state = state.copyWith(classrooms: updated);
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(error: AuthRepository.extractError(e));
     }
   }

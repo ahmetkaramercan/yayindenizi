@@ -7,11 +7,83 @@ import '../../../../../../core/constants/app_constants.dart';
 import '../../providers/student_analysis_provider.dart';
 import '../../../domain/entities/student_analysis.dart';
 
-class StudentAnalysisPage extends ConsumerWidget {
+enum AnalysisSortOrder {
+  mostWrong,
+  mostCorrect,
+  alphabetical,
+}
+
+extension AnalysisSortOrderLabel on AnalysisSortOrder {
+  String get label {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return 'En Çok Yanlış';
+      case AnalysisSortOrder.mostCorrect:
+        return 'En Çok Doğru';
+      case AnalysisSortOrder.alphabetical:
+        return 'Alfabetik';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case AnalysisSortOrder.mostWrong:
+        return Icons.cancel_outlined;
+      case AnalysisSortOrder.mostCorrect:
+        return Icons.check_circle_outline;
+      case AnalysisSortOrder.alphabetical:
+        return Icons.sort_by_alpha;
+    }
+  }
+}
+
+class StudentAnalysisPage extends ConsumerStatefulWidget {
   const StudentAnalysisPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<StudentAnalysisPage> createState() =>
+      _StudentAnalysisPageState();
+}
+
+class _StudentAnalysisPageState extends ConsumerState<StudentAnalysisPage> {
+  AnalysisSortOrder _sortOrder = AnalysisSortOrder.mostWrong;
+
+  List<LearningOutcomeProgress> _sorted(List<LearningOutcomeProgress> list) {
+    final sorted = List<LearningOutcomeProgress>.from(list);
+    switch (_sortOrder) {
+      case AnalysisSortOrder.mostWrong:
+        sorted.sort((a, b) {
+          final aRate = a.completedQuestions > 0
+              ? a.incorrectAnswers / a.completedQuestions
+              : 0.0;
+          final bRate = b.completedQuestions > 0
+              ? b.incorrectAnswers / b.completedQuestions
+              : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.mostCorrect:
+        sorted.sort((a, b) {
+          final aRate = a.completedQuestions > 0
+              ? a.correctAnswers / a.completedQuestions
+              : 0.0;
+          final bRate = b.completedQuestions > 0
+              ? b.correctAnswers / b.completedQuestions
+              : 0.0;
+          return bRate.compareTo(aRate);
+        });
+        break;
+      case AnalysisSortOrder.alphabetical:
+        sorted.sort((a, b) => a.learningOutcome.name
+            .toLowerCase()
+            .compareTo(b.learningOutcome.name.toLowerCase()));
+        break;
+    }
+    return sorted;
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final analysisState = ref.watch(studentAnalysisProvider);
 
     return Scaffold(
@@ -76,11 +148,12 @@ class StudentAnalysisPage extends ConsumerWidget {
                     : Builder(
                         builder: (context) {
                           final analysis = analysisState.analysis!;
-                          final progressList = analysis.learningOutcomeProgress.values.toList()
-                            ..sort((a, b) => b.completedQuestions.compareTo(a.completedQuestions));
+                          final progressList = _sorted(
+                              analysis.learningOutcomeProgress.values.toList());
 
                           return SingleChildScrollView(
-                            padding: const EdgeInsets.all(AppConstants.paddingM),
+                            padding:
+                                const EdgeInsets.all(AppConstants.paddingM),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -102,7 +175,8 @@ class StudentAnalysisPage extends ConsumerWidget {
                                         children: [
                                           _GeneralStatItem(
                                             label: 'Tamamlanan Test',
-                                            value: '${analysis.totalTestsCompleted}',
+                                            value:
+                                                '${analysis.totalTestsCompleted}',
                                             icon: Icons.quiz_outlined,
                                           ),
                                           _GeneralStatItem(
@@ -110,8 +184,8 @@ class StudentAnalysisPage extends ConsumerWidget {
                                             value:
                                                 '${analysis.overallSuccessPercentage.toInt()}%',
                                             icon: Icons.trending_up,
-                                            color: _getSuccessColor(
-                                                analysis.overallSuccessPercentage),
+                                            color: _getSuccessColor(analysis
+                                                .overallSuccessPercentage),
                                           ),
                                         ],
                                       ),
@@ -119,13 +193,24 @@ class StudentAnalysisPage extends ConsumerWidget {
                                   ),
                                 ),
                                 const SizedBox(height: AppConstants.paddingL),
-                                // Kazanım Bazlı Analiz
-                                Text(
-                                  'Kazanım Bazlı Analiz',
-                                  style: AppTextStyles.h5.copyWith(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                // Kazanım Bazlı Analiz başlığı + sıralama
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Kazanım Bazlı Analiz',
+                                        style: AppTextStyles.h5.copyWith(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    _SortMenuButton(
+                                      current: _sortOrder,
+                                      onSelected: (order) =>
+                                          setState(() => _sortOrder = order),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: AppConstants.paddingM),
                                 ...progressList.map((progress) =>
@@ -146,6 +231,89 @@ class StudentAnalysisPage extends ConsumerWidget {
     return AppColors.error;
   }
 }
+
+// ─── Sıralama Butonu ───────────────────────────────────────────────────────────
+
+class _SortMenuButton extends StatelessWidget {
+  final AnalysisSortOrder current;
+  final ValueChanged<AnalysisSortOrder> onSelected;
+
+  const _SortMenuButton({
+    required this.current,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<AnalysisSortOrder>(
+      onSelected: onSelected,
+      tooltip: 'Sıralama',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+      ),
+      itemBuilder: (context) => AnalysisSortOrder.values
+          .map(
+            (order) => PopupMenuItem<AnalysisSortOrder>(
+              value: order,
+              child: Row(
+                children: [
+                  Icon(
+                    order.icon,
+                    size: 18,
+                    color: current == order
+                        ? AppColors.primary
+                        : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    order.label,
+                    style: AppTextStyles.body2.copyWith(
+                      color: current == order
+                          ? AppColors.primary
+                          : AppColors.textPrimary,
+                      fontWeight: current == order
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                  if (current == order) ...[
+                    const Spacer(),
+                    Icon(Icons.check, size: 16, color: AppColors.primary),
+                  ],
+                ],
+              ),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppConstants.radiusM),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(current.icon, size: 16, color: AppColors.primary),
+            const SizedBox(width: 6),
+            Text(
+              current.label,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.primary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Widget'lar ────────────────────────────────────────────────────────────────
 
 class _GeneralStatItem extends StatelessWidget {
   final String label;
@@ -404,5 +572,3 @@ class _DetailStatItem extends StatelessWidget {
     );
   }
 }
-
-

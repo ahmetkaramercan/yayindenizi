@@ -21,9 +21,7 @@ class StudentHomePage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         icon: Icon(
           Icons.hourglass_empty_rounded,
           size: 48,
@@ -31,16 +29,12 @@ class StudentHomePage extends ConsumerWidget {
         ),
         title: Text(
           bookTitle,
-          style: AppTextStyles.h6.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTextStyles.h6.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         content: Text(
           'Bu kitabın içeriği henüz oluşturulmadı.\nYakında eklenecektir.',
-          style: AppTextStyles.body2.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
         actions: [
@@ -76,10 +70,7 @@ class StudentHomePage extends ConsumerWidget {
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primaryLight,
-                      ],
+                      colors: [AppColors.primary, AppColors.primaryLight],
                     ),
                   ),
                   child: SafeArea(
@@ -96,12 +87,12 @@ class StudentHomePage extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 radius: 26,
-                                backgroundColor:
-                                    AppColors.textOnPrimary.withOpacity(0.3),
+                                backgroundColor: AppColors.textOnPrimary
+                                    .withOpacity(0.3),
                                 child: Text(
                                   homeState.student?.adSoyad.isNotEmpty == true
                                       ? homeState.student!.adSoyad[0]
-                                          .toUpperCase()
+                                            .toUpperCase()
                                       : 'Ö',
                                   style: AppTextStyles.h4.copyWith(
                                     color: AppColors.textOnPrimary,
@@ -210,18 +201,6 @@ class StudentHomePage extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            // TODO: Tüm kitaplar sayfasına yönlendir
-                            context.showSnackBar('Tüm kitaplar yakında...');
-                          },
-                          child: Text(
-                            'Tümünü Gör',
-                            style: AppTextStyles.body2.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: AppConstants.paddingM),
@@ -259,11 +238,11 @@ class StudentHomePage extends ConsumerWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: AppConstants.paddingM,
-                          mainAxisSpacing: AppConstants.paddingM,
-                          childAspectRatio: 0.75,
-                        ),
+                              crossAxisCount: 2,
+                              crossAxisSpacing: AppConstants.paddingM,
+                              mainAxisSpacing: AppConstants.paddingM,
+                              childAspectRatio: 0.75,
+                            ),
                         itemCount: homeState.books.length,
                         itemBuilder: (context, index) {
                           final book = homeState.books[index];
@@ -271,8 +250,10 @@ class StudentHomePage extends ConsumerWidget {
                             book: book,
                             onTap: () {
                               if (book.hasContent) {
-                                context.push('/student/book-sections',
-                                    extra: book);
+                                context.push(
+                                  '/student/book-sections',
+                                  extra: book,
+                                );
                               } else {
                                 _showNoContentDialog(context, book.title);
                               }
