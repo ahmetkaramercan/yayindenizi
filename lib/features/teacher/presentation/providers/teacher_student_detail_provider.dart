@@ -48,6 +48,7 @@ class TeacherStudentDetailNotifier
 
   TeacherStudentDetailNotifier(this.classroomId, this.studentId, this.ref)
       : super(TeacherStudentDetailState()) {
+    ref.keepAlive();
     loadData();
   }
 
@@ -61,7 +62,8 @@ class TeacherStudentDetailNotifier
       final detailData =
           await _classroomRepo.getStudentInClassroom(classroomId, studentId);
 
-      final studentJson = detailData['student'] as Map<String, dynamic>? ?? detailData;
+      final studentJson =
+          detailData['student'] as Map<String, dynamic>? ?? detailData;
       final city = studentJson['city'] as Map<String, dynamic>?;
       final district = studentJson['district'] as Map<String, dynamic>?;
       final student = Student(
@@ -93,6 +95,7 @@ class TeacherStudentDetailNotifier
               id: id,
               name: o['name'] ?? o['learningOutcomeName'] ?? '',
               description: o['description']?.toString(),
+              videoUrl: o['videoUrl']?.toString(),
             ),
             totalQuestions: (o['totalQuestions'] ?? 0) as int,
             completedQuestions:
@@ -108,8 +111,9 @@ class TeacherStudentDetailNotifier
         final overview = analyticsData['overview'] as Map<String, dynamic>?;
         final totalTests =
             analyticsData['totalTests'] ?? overview?['totalTests'] ?? 0;
-        final overallSuccess =
-            analyticsData['overallSuccess'] ?? overview?['overallAccuracy'] ?? 0;
+        final overallSuccess = analyticsData['overallSuccess'] ??
+            overview?['overallAccuracy'] ??
+            0;
         final totalCorrect =
             analyticsData['totalCorrect'] ?? overview?['totalCorrect'] ?? 0;
         final totalIncorrect =
@@ -133,24 +137,42 @@ class TeacherStudentDetailNotifier
         final json = r as Map<String, dynamic>;
         final answers = json['answers'] as List? ?? [];
         final totalQuestions = answers.length;
-        final correctAnswers =
-            answers.where((a) => (a as Map<String, dynamic>)['isCorrect'] == true).length;
+        final correctAnswers = answers
+            .where((a) => (a as Map<String, dynamic>)['isCorrect'] == true)
+            .length;
         final wrongAnswers = answers.where((a) {
           final m = a as Map<String, dynamic>;
           return m['isCorrect'] != true && m['selectedIndex'] != null;
         }).length;
         final emptyAnswers = totalQuestions - correctAnswers - wrongAnswers;
 
+        final testData = json['test'] as Map<String, dynamic>? ?? {};
+        final sectionData = testData['section'] as Map<String, dynamic>? ?? {};
+        final bookData = (testData['book'] as Map<String, dynamic>?) ??
+            (sectionData['book'] as Map<String, dynamic>?);
+
+        final bookTitle = bookData?['title'] ?? json['bookTitle'];
+        final testTypeRaw = testData['type'] ?? json['testType'];
+
+        TestType testType = TestType.paragrafKocu;
+        if (testTypeRaw == 'DENEME') {
+          testType = TestType.deneme;
+        } else if (testTypeRaw == 'KONU') {
+          testType = TestType.konu;
+        }
+
         return TestHistoryItem(
           id: json['id'] ?? '',
-          testTitle: json['test']?['title'] ?? json['testTitle'] ?? '',
-          testType: TestType.paragrafKocu,
+          testTitle: testData['title'] ?? json['testTitle'] ?? '',
+          bookTitle: bookTitle,
+          testType: testType,
           totalQuestions: totalQuestions,
           correctAnswers: correctAnswers,
           wrongAnswers: wrongAnswers,
           emptyAnswers: emptyAnswers,
           successPercentage: _toDouble(json['score']),
-          completedAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+          completedAt:
+              DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
         );
       }).toList();
 
@@ -168,7 +190,9 @@ class TeacherStudentDetailNotifier
   Future<void> removeStudent() async {
     try {
       await _classroomRepo.removeStudentFromClassroom(classroomId, studentId);
-      ref.read(classroomDetailProvider(classroomId).notifier).removeStudent(studentId);
+      ref
+          .read(classroomDetailProvider(classroomId).notifier)
+          .removeStudent(studentId);
     } catch (e) {
       state = state.copyWith(error: e.toString());
     }
@@ -182,8 +206,9 @@ class TeacherStudentDetailNotifier
 }
 
 // Key is a record of (classroomId, studentId)
-final teacherStudentDetailProvider =
-    StateNotifierProvider.family<TeacherStudentDetailNotifier,
-        TeacherStudentDetailState, (String, String)>((ref, key) {
+final teacherStudentDetailProvider = StateNotifierProvider.family<
+    TeacherStudentDetailNotifier,
+    TeacherStudentDetailState,
+    (String, String)>((ref, key) {
   return TeacherStudentDetailNotifier(key.$1, key.$2, ref);
 });

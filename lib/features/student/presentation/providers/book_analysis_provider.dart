@@ -30,9 +30,11 @@ class BookAnalysisState {
 
 class BookAnalysisNotifier extends StateNotifier<BookAnalysisState> {
   final String bookId;
+  final Ref _ref;
   final _analyticsRepo = sl<AnalyticsRepository>();
 
-  BookAnalysisNotifier(this.bookId) : super(BookAnalysisState()) {
+  BookAnalysisNotifier(this.bookId, this._ref) : super(BookAnalysisState()) {
+    _ref.keepAlive();
     loadAnalysis();
   }
 
@@ -56,6 +58,7 @@ class BookAnalysisNotifier extends StateNotifier<BookAnalysisState> {
             id: id,
             name: o['name'] ?? o['learningOutcomeName'] ?? '',
             description: o['description']?.toString(),
+            videoUrl: o['videoUrl']?.toString(),
           ),
           totalQuestions: (o['totalQuestions'] ?? 0) as int,
           completedQuestions:
@@ -108,5 +111,5 @@ class BookAnalysisNotifier extends StateNotifier<BookAnalysisState> {
 final bookAnalysisProvider =
     StateNotifierProvider.family<BookAnalysisNotifier, BookAnalysisState, String>(
         (ref, bookId) {
-  return BookAnalysisNotifier(bookId);
+  return BookAnalysisNotifier(bookId, ref);
 });

@@ -2,12 +2,16 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/prisma/prisma.service';
 import { SubmitTestResultDto } from './dto';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Injectable()
 export class TestResultsService {
   private readonly logger = new Logger(TestResultsService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private analyticsService: AnalyticsService,
+  ) {}
 
   async submit(userId: string, dto: SubmitTestResultDto) {
     const test = await this.prisma.test.findUnique({
@@ -123,6 +127,7 @@ export class TestResultsService {
       this.updateAnalytics(userId, test.sectionId),
       this.updateOutcomeAnalytics(userId, affectedOutcomeIds),
     ]);
+    await this.analyticsService.invalidateUserCache(userId);
 
     return {
       resultId: result.id,

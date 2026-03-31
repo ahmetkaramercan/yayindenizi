@@ -3,14 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/buttons/app_button.dart';
 import '../../../../core/widgets/inputs/app_text_field.dart';
-import '../../../../core/widgets/inputs/city_district_selector.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../cities/data/models/city_model.dart';
-import '../../../cities/data/models/district_model.dart';
 import '../providers/teacher_register_provider.dart';
 
 class TeacherRegisterPage extends ConsumerStatefulWidget {
@@ -31,9 +28,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
   bool _obscurePassword = true;
   bool _obscurePasswordConfirm = true;
 
-  CityModel? _selectedCity;
-  DistrictModel? _selectedDistrict;
-
   @override
   void dispose() {
     _adSoyadController.dispose();
@@ -46,19 +40,12 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedCity == null || _selectedDistrict == null) {
-        context.showSnackBar(
-          'Lütfen il ve ilçe seçin.',
-          backgroundColor: AppColors.error,
-        );
-        return;
-      }
       ref.read(teacherRegisterProvider.notifier).register(
             adSoyad: _adSoyadController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            cityId: _selectedCity!.id,
-            districtId: _selectedDistrict!.id,
+            cityId: null,
+            districtId: null,
             okul: _okulController.text.trim().isEmpty
                 ? null
                 : _okulController.text.trim(),
@@ -185,15 +172,6 @@ class _TeacherRegisterPageState extends ConsumerState<TeacherRegisterPage> {
                       });
                     },
                   ),
-                ),
-                const SizedBox(height: AppConstants.paddingM),
-                CityDistrictSelector(
-                  selectedCityId: _selectedCity?.id,
-                  selectedDistrictId: _selectedDistrict?.id,
-                  selectedCityName: _selectedCity?.name,
-                  selectedDistrictName: _selectedDistrict?.name,
-                  onCitySelected: (c) => setState(() => _selectedCity = c),
-                  onDistrictSelected: (d) => setState(() => _selectedDistrict = d),
                 ),
                 const SizedBox(height: AppConstants.paddingM),
                 AppTextField(

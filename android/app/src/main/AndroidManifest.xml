@@ -11,7 +11,7 @@
     </queries>
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="yayindenizi"
+        android:label="Yayın Denizi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true">

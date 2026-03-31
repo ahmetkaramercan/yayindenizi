@@ -11,6 +11,7 @@ import '../../features/student/presentation/pages/paragraf_kocu/section_test_lis
 import '../../features/student/presentation/pages/paragraf_kocu/test_page.dart';
 import '../../features/student/presentation/pages/paragraf_kocu/analysis_page.dart';
 import '../../features/student/presentation/pages/paragraf_kocu/section_analysis_page.dart';
+import '../../features/student/presentation/pages/paragraf_kocu/paragraf_kocu_videos_page.dart';
 import '../../features/student/presentation/pages/analysis/book_analysis_page.dart';
 import '../../features/student/domain/entities/book.dart';
 import '../../features/student/presentation/pages/deneme_kitaplari/mock_test_list_page.dart';
@@ -185,6 +186,17 @@ final appRouter = GoRouter(
         return SectionAnalysisPage(
           sectionId: extra['sectionId'] as String,
           sectionTitle: extra['sectionTitle'] as String,
+          bookTitle: extra['bookTitle'] as String,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/student/paragraf-kocu-videos',
+      name: 'paragraf-kocu-videos',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+        return ParagrafKocuVideosPage(
+          bookId: extra['bookId'] as String,
           bookTitle: extra['bookTitle'] as String,
         );
       },

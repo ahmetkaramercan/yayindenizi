@@ -334,6 +334,7 @@ model LearningOutcome {
   name        String
   description String  @default("")
   category    String
+  videoUrl    String? @map("video_url")
   bookId      String? @map("book_id")
 
   book              Book?              @relation(fields: [bookId], references: [id], onDelete: SetNull)

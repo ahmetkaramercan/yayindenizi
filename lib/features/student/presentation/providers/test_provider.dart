@@ -6,6 +6,7 @@ import '../../domain/entities/test_result.dart';
 import '../../domain/utils/test_result_calculator.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../data/repositories/test_repository.dart';
+import 'student_analysis_provider.dart';
 
 class TestState {
   final Test? test;
@@ -40,7 +41,8 @@ class TestState {
 }
 
 class TestNotifier extends StateNotifier<TestState> {
-  TestNotifier() : super(TestState());
+  final Ref _ref;
+  TestNotifier(this._ref) : super(TestState());
 
   final _testRepo = sl<TestRepository>();
 
@@ -207,6 +209,7 @@ class TestNotifier extends StateNotifier<TestState> {
         answers: answerList,
         totalTime: 0,
       );
+      _ref.invalidate(studentAnalysisProvider);
       dev.log('Test result submitted for test $testId', name: 'TestNotifier');
     } catch (e) {
       dev.log('Failed to submit test result: $e', name: 'TestNotifier');
@@ -219,5 +222,5 @@ class TestNotifier extends StateNotifier<TestState> {
 }
 
 final testProvider = StateNotifierProvider<TestNotifier, TestState>((ref) {
-  return TestNotifier();
+  return TestNotifier(ref);
 });

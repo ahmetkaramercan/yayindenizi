@@ -32,6 +32,7 @@ class StudentAnalysisNotifier extends StateNotifier<StudentAnalysisState> {
   final Ref ref;
 
   StudentAnalysisNotifier(this.ref) : super(StudentAnalysisState()) {
+    ref.keepAlive();
     loadAnalysis();
   }
 
@@ -58,6 +59,7 @@ class StudentAnalysisNotifier extends StateNotifier<StudentAnalysisState> {
             id: id,
             name: o['name'] ?? o['learningOutcomeName'] ?? '',
             description: o['description']?.toString(),
+            videoUrl: o['videoUrl']?.toString(),
           ),
           totalQuestions: (o['totalQuestions'] ?? 0) as int,
           completedQuestions:

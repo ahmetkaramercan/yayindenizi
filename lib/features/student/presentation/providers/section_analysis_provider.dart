@@ -38,9 +38,11 @@ class SectionAnalysisState {
 
 class SectionAnalysisNotifier extends StateNotifier<SectionAnalysisState> {
   final String sectionId;
+  final Ref _ref;
   final _analyticsRepo = sl<AnalyticsRepository>();
 
-  SectionAnalysisNotifier(this.sectionId) : super(SectionAnalysisState()) {
+  SectionAnalysisNotifier(this.sectionId, this._ref) : super(SectionAnalysisState()) {
+    _ref.keepAlive();
     loadAnalysis();
   }
 
@@ -63,6 +65,7 @@ class SectionAnalysisNotifier extends StateNotifier<SectionAnalysisState> {
             id: id,
             name: o['name'] ?? o['learningOutcomeName'] ?? '',
             description: o['description']?.toString(),
+            videoUrl: o['videoUrl']?.toString(),
           ),
           totalQuestions: (o['totalQuestions'] ?? 0) as int,
           completedQuestions:
@@ -108,5 +111,5 @@ class SectionAnalysisNotifier extends StateNotifier<SectionAnalysisState> {
 final sectionAnalysisProvider =
     StateNotifierProvider.family<SectionAnalysisNotifier, SectionAnalysisState, String>(
         (ref, sectionId) {
-  return SectionAnalysisNotifier(sectionId);
+  return SectionAnalysisNotifier(sectionId, ref);
 });

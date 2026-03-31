@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 
-enum AppButtonType { primary, secondary, outline, text, danger }
+enum AppButtonType { primary, secondary, outline, accentOutline, text, danger }
 
 class AppButton extends StatelessWidget {
   final String text;
@@ -82,6 +82,15 @@ class AppButton extends StatelessWidget {
           ),
           child: _buildButtonContent(),
         );
+      case AppButtonType.accentOutline:
+        return OutlinedButton(
+          onPressed: onPressed,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.accent,
+            side: const BorderSide(color: AppColors.accent),
+          ),
+          child: _buildButtonContent(),
+        );
       case AppButtonType.text:
         return TextButton(
           onPressed: onPressed,
@@ -141,6 +150,10 @@ class AppButton extends StatelessWidget {
       case AppButtonType.text:
         backgroundColor = Colors.transparent;
         foregroundColor = AppColors.primary;
+        break;
+      case AppButtonType.accentOutline:
+        backgroundColor = Colors.transparent;
+        foregroundColor = AppColors.accent;
         break;
       case AppButtonType.danger:
         backgroundColor = AppColors.error;

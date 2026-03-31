@@ -1,6 +1,7 @@
 import {
   IsEmail,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
   MaxLength,
@@ -25,13 +26,13 @@ export class CreateTeacherDto {
   @MaxLength(100)
   adSoyad: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'İl seçimi zorunludur' })
-  cityId: string;
+  cityId?: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'İlçe seçimi zorunludur' })
-  districtId: string;
+  districtId?: string;
 
   @IsString()
   @IsNotEmpty({ message: 'Okul adı boş bırakılamaz' })

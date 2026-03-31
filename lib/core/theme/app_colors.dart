@@ -18,6 +18,7 @@ class AppColors {
   static const Color accent = Color(0xFFD32F2F);
   static const Color accentLight = Color(0xFFE53935);
   static const Color accentDark = Color(0xFFB71C1C);
+  static const Color accentSurface = Color(0xFFFFF3F3); // Çok açık kırmızı arka plan
 
   // Metin renkleri
   static const Color textPrimary = Color(0xFF212121);

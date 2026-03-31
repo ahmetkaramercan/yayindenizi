@@ -7,6 +7,7 @@ import '../../domain/entities/topic_test_result.dart';
 import '../../domain/utils/test_result_calculator.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../data/repositories/test_repository.dart';
+import 'student_analysis_provider.dart';
 
 class TopicState {
   final List<Topic> topics;
@@ -57,7 +58,8 @@ class TopicState {
 }
 
 class TopicNotifier extends StateNotifier<TopicState> {
-  TopicNotifier() : super(TopicState()) {
+  final Ref _ref;
+  TopicNotifier(this._ref) : super(TopicState()) {
     loadTopics();
   }
 
@@ -319,6 +321,7 @@ class TopicNotifier extends StateNotifier<TopicState> {
         answers: answerList,
         totalTime: 0,
       );
+      _ref.invalidate(studentAnalysisProvider);
       dev.log('Test result submitted for test $testId', name: 'TopicNotifier');
     } catch (e) {
       dev.log('Failed to submit test result: $e', name: 'TopicNotifier');
@@ -423,5 +426,5 @@ class TopicNotifier extends StateNotifier<TopicState> {
 
 final topicProvider =
     StateNotifierProvider<TopicNotifier, TopicState>((ref) {
-  return TopicNotifier();
+  return TopicNotifier(ref);
 });

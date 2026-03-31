@@ -35,8 +35,8 @@ class StudentRegisterNotifier extends StateNotifier<StudentRegisterState> {
     required String adSoyad,
     required String email,
     required String password,
-    required String cityId,
-    required String districtId,
+    String? cityId,
+    String? districtId,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
 

@@ -9,6 +9,7 @@ enum TestType {
 class TestHistoryItem extends Equatable {
   final String id;
   final String testTitle;
+  final String? bookTitle; // Yeni eklendi
   final TestType testType;
   final int? level; // Paragraf Koçu için seviye
   final String? topicTitle; // Konu testi için konu adı
@@ -23,6 +24,7 @@ class TestHistoryItem extends Equatable {
   const TestHistoryItem({
     required this.id,
     required this.testTitle,
+    this.bookTitle,
     required this.testType,
     this.level,
     this.topicTitle,
@@ -39,6 +41,7 @@ class TestHistoryItem extends Equatable {
   List<Object?> get props => [
         id,
         testTitle,
+        bookTitle,
         testType,
         level,
         topicTitle,
@@ -62,5 +65,3 @@ class TestHistoryItem extends Equatable {
     }
   }
 }
-
-

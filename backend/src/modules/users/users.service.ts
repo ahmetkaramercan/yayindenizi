@@ -48,7 +48,9 @@ export class UsersService {
 
   async createStudent(dto: CreateStudentDto) {
     await this.ensureEmailAvailable(dto.email);
-    await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    if (dto.cityId && dto.districtId) {
+      await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    }
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
     const user = await this.prisma.user.create({
@@ -69,7 +71,9 @@ export class UsersService {
 
   async createTeacher(dto: CreateTeacherDto) {
     await this.ensureEmailAvailable(dto.email);
-    await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    if (dto.cityId && dto.districtId) {
+      await this.citiesService.validateDistrictBelongsToCity(dto.districtId, dto.cityId);
+    }
     const hashedPassword = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
 
     const user = await this.prisma.user.create({

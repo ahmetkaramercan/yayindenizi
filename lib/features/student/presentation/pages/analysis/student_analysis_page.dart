@@ -161,12 +161,26 @@ class _StudentAnalysisPageState extends ConsumerState<StudentAnalysisPage> {
                                 AppCard(
                                   child: Column(
                                     children: [
-                                      Text(
-                                        'Genel İstatistikler',
-                                        style: AppTextStyles.h5.copyWith(
-                                          color: AppColors.textPrimary,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            width: 4,
+                                            height: 22,
+                                            decoration: BoxDecoration(
+                                              color: AppColors.accent,
+                                              borderRadius: BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            'Genel İstatistikler',
+                                            style: AppTextStyles.h5.copyWith(
+                                              color: AppColors.textPrimary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                       const SizedBox(height: 24),
                                       Row(
@@ -196,6 +210,15 @@ class _StudentAnalysisPageState extends ConsumerState<StudentAnalysisPage> {
                                 // Kazanım Bazlı Analiz başlığı + sıralama
                                 Row(
                                   children: [
+                                    Container(
+                                      width: 4,
+                                      height: 22,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.accent,
+                                        borderRadius: BorderRadius.circular(2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
                                     Expanded(
                                       child: Text(
                                         'Kazanım Bazlı Analiz',

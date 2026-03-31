@@ -17,6 +17,42 @@ import '../../../auth/data/repositories/auth_repository.dart';
 class StudentHomePage extends ConsumerWidget {
   const StudentHomePage({super.key});
 
+  Future<void> _showDeleteAccountDialog(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hesabı Sil'),
+        content: const Text(
+          'Hesabınızı silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz. Tüm verileriniz (test sonuçları, istatistikler) kalıcı olarak silinecektir.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Hesabımı Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      try {
+        ref.read(invalidateUserProvidersProvider)();
+        await sl<AuthRepository>().deleteAccount();
+        if (context.mounted) context.pushReplacement('/login');
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Hesap silinemedi. Lütfen tekrar deneyin.')),
+          );
+        }
+      }
+    }
+  }
+
   void _showNoContentDialog(BuildContext context, String bookTitle) {
     showDialog(
       context: context,
@@ -65,15 +101,36 @@ class StudentHomePage extends ConsumerWidget {
               pinned: true,
               backgroundColor: AppColors.primary,
               flexibleSpace: FlexibleSpaceBar(
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [AppColors.primary, AppColors.primaryLight],
+                background: Stack(
+                  children: [
+                    Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.primary, AppColors.primaryLight],
+                        ),
+                      ),
                     ),
-                  ),
-                  child: SafeArea(
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      bottom: 0,
+                      width: 100,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.centerRight,
+                            end: Alignment.centerLeft,
+                            colors: [
+                              AppColors.accentDark.withValues(alpha: 0.35),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    SafeArea(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppConstants.paddingL,
@@ -133,16 +190,39 @@ class StudentHomePage extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.logout),
-                                color: AppColors.textOnPrimary,
-                                onPressed: () async {
-                                  ref.read(invalidateUserProvidersProvider)();
-                                  await sl<AuthRepository>().logout();
-                                  if (context.mounted) {
-                                    context.pushReplacement('/login');
+                              PopupMenuButton<String>(
+                                icon: Icon(Icons.more_vert, color: AppColors.textOnPrimary),
+                                onSelected: (value) async {
+                                  if (value == 'logout') {
+                                    ref.read(invalidateUserProvidersProvider)();
+                                    await sl<AuthRepository>().logout();
+                                    if (context.mounted) context.pushReplacement('/login');
+                                  } else if (value == 'delete') {
+                                    await _showDeleteAccountDialog(context, ref);
                                   }
                                 },
+                                itemBuilder: (_) => [
+                                  const PopupMenuItem(
+                                    value: 'logout',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.logout, size: 20),
+                                        SizedBox(width: 8),
+                                        Text('Çıkış Yap'),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(
+                                      children: [
+                                        Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                                        const SizedBox(width: 8),
+                                        Text('Hesabımı Sil', style: TextStyle(color: AppColors.error)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -150,6 +230,7 @@ class StudentHomePage extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  ],
                 ),
               ),
             ),
@@ -186,14 +267,22 @@ class StudentHomePage extends ConsumerWidget {
                       onPressed: () {
                         context.push('/student/rehberlik');
                       },
-                      type: AppButtonType.outline,
+                      type: AppButtonType.accentOutline,
                       isFullWidth: true,
                     ),
                     const SizedBox(height: AppConstants.paddingL),
                     // Kitaplar Başlığı
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
+                        Container(
+                          width: 4,
+                          height: 26,
+                          decoration: BoxDecoration(
+                            color: AppColors.accent,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
                         Text(
                           'Kitaplar',
                           style: AppTextStyles.h4.copyWith(

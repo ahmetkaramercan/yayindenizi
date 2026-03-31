@@ -70,3 +70,8 @@ coverage/
 .env
 .env.local
 backend/.env
+
+# Android signing key (ASLA commit'leme)
+android/key.properties
+*.jks
+*.keystore

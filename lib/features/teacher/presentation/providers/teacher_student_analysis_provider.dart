@@ -30,7 +30,9 @@ class TeacherStudentAnalysisState {
 
 class TeacherStudentAnalysisNotifier
     extends StateNotifier<TeacherStudentAnalysisState> {
-  TeacherStudentAnalysisNotifier() : super(TeacherStudentAnalysisState());
+  TeacherStudentAnalysisNotifier(Ref ref) : super(TeacherStudentAnalysisState()) {
+    ref.keepAlive();
+  }
 
   final _analyticsRepo = sl<AnalyticsRepository>();
 
@@ -54,6 +56,7 @@ class TeacherStudentAnalysisNotifier
             id: id,
             name: o['name'] ?? o['learningOutcomeName'] ?? '',
             description: o['description']?.toString(),
+            videoUrl: o['videoUrl']?.toString(),
           ),
           totalQuestions: (o['totalQuestions'] ?? 0) as int,
           completedQuestions:
@@ -106,5 +109,5 @@ class TeacherStudentAnalysisNotifier
 final teacherStudentAnalysisProvider =
     StateNotifierProvider<TeacherStudentAnalysisNotifier,
         TeacherStudentAnalysisState>((ref) {
-  return TeacherStudentAnalysisNotifier();
+  return TeacherStudentAnalysisNotifier(ref);
 });

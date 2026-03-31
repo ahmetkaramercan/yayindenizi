@@ -45,6 +45,7 @@
     "seed:all": "npm run prisma:seed && npm run seed:paragraf-kocu:structure && npm run seed:outcomes && npm run seed:denemeler:structure && npm run seed:denemeler && npm run seed:denemeler:mappings && npm run seed:edebiyat:structure && npm run seed:dilbilgisi:structure && npm run seed:dilbilgisi:outcomes && npm run seed:dilbilgisi:mappings && npm run seed:tyt-turkce:structure && npm run seed:turkce:sorubankasi:structure && npm run seed:turkce:sorubankasi:outcomes && npm run seed:turkce:sorubankasi:mappings && npm run seed:dilbilgisi:sorubankasi:structure && npm run seed:dilbilgisi:sorubankasi:outcomes && npm run seed:dilbilgisi:sorubankasi:mappings && npm run seed:edebiyat-soru-bankasi:structure && npm run seed:edebiyat-soru-bankasi:outcomes && npm run seed:edebiyat-soru-bankasi:mappings"
   },
   "dependencies": {
+    "@nestjs/cache-manager": "^3.1.0",
     "@nestjs/common": "^10.4.0",
     "@nestjs/config": "^3.3.0",
     "@nestjs/core": "^10.4.0",
@@ -55,6 +56,7 @@
     "@nestjs/swagger": "^8.1.0",
     "@prisma/client": "^6.3.0",
     "bcrypt": "^5.1.1",
+    "cache-manager": "^7.2.8",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "joi": "^18.0.2",

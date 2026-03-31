@@ -55,15 +55,15 @@ class AuthRepository {
     required String email,
     required String password,
     required String adSoyad,
-    required String cityId,
-    required String districtId,
+    String? cityId,
+    String? districtId,
   }) async {
     final data = await _api.post('/auth/register/student', data: {
       'email': email,
       'password': password,
       'adSoyad': adSoyad,
-      'cityId': cityId,
-      'districtId': districtId,
+      if (cityId != null) 'cityId': cityId,
+      if (districtId != null) 'districtId': districtId,
     });
     final response = AuthResponse.fromJson(data as Map<String, dynamic>);
     await _persistAuth(response);
@@ -74,17 +74,17 @@ class AuthRepository {
     required String email,
     required String password,
     required String adSoyad,
-    required String cityId,
-    required String districtId,
-    required String okul,
+    String? cityId,
+    String? districtId,
+    String? okul,
   }) async {
     final data = await _api.post('/auth/register/teacher', data: {
       'email': email,
       'password': password,
       'adSoyad': adSoyad,
-      'cityId': cityId,
-      'districtId': districtId,
-      'okul': okul,
+      if (cityId != null) 'cityId': cityId,
+      if (districtId != null) 'districtId': districtId,
+      if (okul != null && okul.isNotEmpty) 'okul': okul,
     });
     final response = AuthResponse.fromJson(data as Map<String, dynamic>);
     await _persistAuth(response);
@@ -102,6 +102,11 @@ class AuthRepository {
     } finally {
       await _storage.clear();
     }
+  }
+
+  Future<void> deleteAccount() async {
+    await _api.delete('/auth/account');
+    await _storage.clear();
   }
 
   /// Extracts a user-friendly error message from a DioException

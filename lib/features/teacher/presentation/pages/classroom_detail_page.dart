@@ -19,7 +19,8 @@ class ClassroomDetailPage extends ConsumerWidget {
   Future<void> _showRenameDialog(
       BuildContext context, WidgetRef ref, String currentName) async {
     final controller = TextEditingController(text: currentName);
-    await showDialog<void>(
+
+    final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Sınıf Adını Değiştir'),
@@ -28,6 +29,10 @@ class ClassroomDetailPage extends ConsumerWidget {
           decoration: const InputDecoration(labelText: 'Sınıf Adı'),
           autofocus: true,
           textCapitalization: TextCapitalization.words,
+          onSubmitted: (value) {
+            final name = value.trim();
+            if (name.isNotEmpty) Navigator.of(ctx).pop(name);
+          },
         ),
         actions: [
           TextButton(
@@ -35,28 +40,26 @@ class ClassroomDetailPage extends ConsumerWidget {
             child: const Text('İptal'),
           ),
           TextButton(
-            onPressed: () async {
+            onPressed: () {
               final name = controller.text.trim();
-              if (name.isNotEmpty && name != currentName) {
-                await sl<ClassroomRepository>()
-                    .updateClassroom(classroomId, name);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-                ref
-                    .read(classroomDetailProvider(classroomId).notifier)
-                    .loadDetail();
-                ref
-                    .read(teacherDashboardProvider.notifier)
-                    .loadClassrooms();
-              } else {
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              }
+              if (name.isNotEmpty) Navigator.of(ctx).pop(name);
             },
             child: const Text('Kaydet'),
           ),
         ],
       ),
     );
+
     controller.dispose();
+
+    if (newName != null && newName != currentName && context.mounted) {
+      await ref
+          .read(teacherDashboardProvider.notifier)
+          .renameClassroom(classroomId, newName);
+      if (context.mounted) {
+        ref.read(classroomDetailProvider(classroomId).notifier).loadDetail();
+      }
+    }
   }
 
   Future<void> _confirmDeleteClassroom(
@@ -88,13 +91,14 @@ class ClassroomDetailPage extends ConsumerWidget {
     }
   }
 
-  Future<void> _confirmRemoveStudent(
-      BuildContext context, WidgetRef ref, String studentId, String name) async {
+  Future<void> _confirmRemoveStudent(BuildContext context, WidgetRef ref,
+      String studentId, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Öğrenciyi Çıkar'),
-        content: Text('$name adlı öğrenciyi sınıftan çıkarmak istiyor musunuz?'),
+        content:
+            Text('$name adlı öğrenciyi sınıftan çıkarmak istiyor musunuz?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
@@ -128,8 +132,7 @@ class ClassroomDetailPage extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: 'Sınıfı Yeniden Adlandır',
-              onPressed: () =>
-                  _showRenameDialog(context, ref, classroom.name),
+              onPressed: () => _showRenameDialog(context, ref, classroom.name),
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),
@@ -214,8 +217,7 @@ class ClassroomDetailPage extends ConsumerWidget {
                                   color: AppColors.accent.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                      color:
-                                          AppColors.accent.withOpacity(0.4)),
+                                      color: AppColors.accent.withOpacity(0.4)),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -311,15 +313,15 @@ class ClassroomDetailPage extends ConsumerWidget {
                         const SizedBox(height: 16),
                         Text(
                           'Henüz bu sınıfta öğrenci yok',
-                          style: AppTextStyles.body1.copyWith(
-                              color: AppColors.textSecondary),
+                          style: AppTextStyles.body1
+                              .copyWith(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'Öğrenciler sınıf kodunu girerek katılabilir',
-                          style: AppTextStyles.body2.copyWith(
-                              color: AppColors.textSecondary),
+                          style: AppTextStyles.body2
+                              .copyWith(color: AppColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -355,8 +357,8 @@ class ClassroomDetailPage extends ConsumerWidget {
                                 student.adSoyad.isNotEmpty
                                     ? student.adSoyad[0].toUpperCase()
                                     : 'Ö',
-                                style: AppTextStyles.h6.copyWith(
-                                    color: AppColors.textOnPrimary),
+                                style: AppTextStyles.h6
+                                    .copyWith(color: AppColors.textOnPrimary),
                               ),
                             ),
                             const SizedBox(width: AppConstants.paddingM),
@@ -383,8 +385,8 @@ class ClassroomDetailPage extends ConsumerWidget {
                             IconButton(
                               icon: Icon(Icons.person_remove_outlined,
                                   color: AppColors.error.withOpacity(0.7)),
-                              onPressed: () => _confirmRemoveStudent(
-                                  context, ref, student.id ?? '', student.adSoyad),
+                              onPressed: () => _confirmRemoveStudent(context,
+                                  ref, student.id ?? '', student.adSoyad),
                             ),
                             Icon(Icons.chevron_right,
                                 color: AppColors.textSecondary),

@@ -206,8 +206,54 @@ class LevelSelectionPage extends ConsumerWidget {
                         },
                       );
                     },
-                  )
-                else if (isKonuBook)
+                  ),
+                if (isLevelBasedBook &&
+                    book.title == 'Paragraf Koçu (Hafta Esaslı)') ...[
+                  const SizedBox(height: AppConstants.paddingL),
+                  AppCard(
+                    onTap: () {
+                      context.push(
+                        '/student/paragraf-kocu-videos',
+                        extra: {'bookId': book.id, 'bookTitle': book.title},
+                      );
+                    },
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.play_circle_outline,
+                          size: 32,
+                          color: AppColors.error,
+                        ),
+                        const SizedBox(width: AppConstants.paddingM),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Tüm Videolar',
+                                style: AppTextStyles.h6.copyWith(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Bu kitabın tüm konu videolarını izleyin',
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.chevron_right,
+                          color: AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (isKonuBook)
                   // KONU: Kazanım başlıklarıyla bölüm listesi
                   ListView.builder(
                     shrinkWrap: true,
@@ -284,8 +330,8 @@ class LevelSelectionPage extends ConsumerWidget {
                         ),
                       );
                     },
-                  )
-                else
+                  ),
+                if (!isLevelBasedBook && !isKonuBook)
                   // DENEME: Düz test listesi
                   ListView.builder(
                     shrinkWrap: true,

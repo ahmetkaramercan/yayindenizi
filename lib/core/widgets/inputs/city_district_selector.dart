@@ -72,7 +72,7 @@ class _CityDistrictSelectorState extends ConsumerState<CityDistrictSelector> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SelectField(
-          label: 'İl *',
+          label: 'İl (İsteğe bağlı)',
           hint: 'İl seçin',
           value: widget.selectedCityName,
           prefixIcon: Icons.location_city_outlined,
@@ -80,7 +80,7 @@ class _CityDistrictSelectorState extends ConsumerState<CityDistrictSelector> {
         ),
         const SizedBox(height: AppConstants.paddingM),
         _SelectField(
-          label: 'İlçe *',
+          label: 'İlçe (İsteğe bağlı)',
           hint: widget.selectedCityId != null && widget.selectedCityId!.isNotEmpty
               ? 'İlçe seçin'
               : 'Önce il seçin',

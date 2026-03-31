@@ -44,6 +44,12 @@ export class BooksController {
     return this.booksService.findOne(id);
   }
 
+  @Get(':id/videos')
+  @ApiOperation({ summary: 'Kitaba ait kazanım videolarını listele' })
+  getBookVideos(@Param('id', ParseUUIDPipe) id: string) {
+    return this.booksService.getBookOutcomeVideos(id);
+  }
+
   @Patch(':id')
   @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Kitap güncelle (Admin)' })

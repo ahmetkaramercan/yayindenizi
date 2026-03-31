@@ -35,8 +35,8 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
     required String adSoyad,
     required String email,
     required String password,
-    required String cityId,
-    required String districtId,
+    String? cityId,
+    String? districtId,
     String? okul,
   }) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
@@ -48,7 +48,7 @@ class TeacherRegisterNotifier extends StateNotifier<TeacherRegisterState> {
         adSoyad: adSoyad,
         cityId: cityId,
         districtId: districtId,
-        okul: okul ?? '',
+        okul: okul,
       );
 
       state = state.copyWith(isLoading: false, isSuccess: true);

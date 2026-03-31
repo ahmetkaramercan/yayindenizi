@@ -236,85 +236,120 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                           const SizedBox(height: AppConstants.paddingL),
                         ],
                         // Kitap Seçimi ve Analiz
-                        Text(
-                          'Kitap Analizi',
-                          style: AppTextStyles.h5.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: AppConstants.paddingS),
-                        Text(
-                          'Öğrencinin hangi kitaptaki analizini görmek istediğinizi seçin',
-                          style: AppTextStyles.body2.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: AppConstants.paddingM),
-                        if (_books.isNotEmpty)
-                          SizedBox(
-                            height: 48,
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: _books.length,
-                              itemBuilder: (context, index) {
-                                final book = _books[index];
-                                final isSelected = _selectedBookId == book.id;
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                    right: AppConstants.paddingS,
-                                  ),
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() => _selectedBookId = book.id);
-                                      ref
-                                          .read(teacherStudentAnalysisProvider
-                                              .notifier)
-                                          .loadStudentAnalysis(
-                                            widget.studentId,
-                                            bookId: book.id,
-                                          );
-                                    },
-                                    borderRadius: BorderRadius.circular(
-                                        AppConstants.radiusM),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: AppConstants.paddingM,
-                                        vertical: AppConstants.paddingS,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? AppColors.primaryLight
-                                                .withOpacity(0.2)
-                                            : AppColors.surface,
-                                        border: Border.all(
-                                          color: isSelected
-                                              ? AppColors.primary
-                                              : AppColors.border,
-                                          width: isSelected ? 2 : 1,
-                                        ),
-                                        borderRadius: BorderRadius.circular(
-                                            AppConstants.radiusM),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          book.title,
-                                          style: AppTextStyles.body2.copyWith(
-                                            color: AppColors.textPrimary,
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
+                        Container(
+                          padding: const EdgeInsets.all(AppConstants.paddingM),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentSurface.withOpacity(0.5),
+                            borderRadius:
+                                BorderRadius.circular(AppConstants.radiusL),
+                            border: Border.all(
+                              color: AppColors.accent.withOpacity(0.3),
+                              width: 1.5,
                             ),
                           ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.menu_book,
+                                    color: AppColors.accent,
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Kitap Analizi',
+                                    style: AppTextStyles.h5.copyWith(
+                                      color: AppColors.accent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppConstants.paddingS),
+                              Text(
+                                'Öğrencinin hangi kitaptaki analizini görmek istediğinizi seçin',
+                                style: AppTextStyles.body2.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(height: AppConstants.paddingM),
+                              if (_books.isNotEmpty) ...[
+                                SizedBox(
+                                  height: 48,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: _books.length,
+                                    itemBuilder: (context, index) {
+                                      final book = _books[index];
+                                      final isSelected =
+                                          _selectedBookId == book.id;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: AppConstants.paddingS,
+                                        ),
+                                        child: InkWell(
+                                          onTap: () {
+                                            setState(() =>
+                                                _selectedBookId = book.id);
+                                            ref
+                                                .read(
+                                                    teacherStudentAnalysisProvider
+                                                        .notifier)
+                                                .loadStudentAnalysis(
+                                                  widget.studentId,
+                                                  bookId: book.id,
+                                                );
+                                          },
+                                          borderRadius: BorderRadius.circular(
+                                              AppConstants.radiusM),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: AppConstants.paddingM,
+                                              vertical: AppConstants.paddingS,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? AppColors.accent
+                                                      .withOpacity(0.1)
+                                                  : AppColors.surface,
+                                              border: Border.all(
+                                                color: isSelected
+                                                    ? AppColors.accent
+                                                    : AppColors.border,
+                                                width: isSelected ? 2 : 1,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      AppConstants.radiusM),
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                book.title,
+                                                style: AppTextStyles.body2
+                                                    .copyWith(
+                                                  color: isSelected
+                                                      ? AppColors.accent
+                                                      : AppColors.textPrimary,
+                                                  fontWeight: isSelected
+                                                      ? FontWeight.bold
+                                                      : FontWeight.normal,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                         const SizedBox(height: AppConstants.paddingL),
                         if (_selectedBookId == null)
                           AppCard(
@@ -323,13 +358,13 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                                 Icon(
                                   Icons.menu_book_outlined,
                                   size: 48,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.accent,
                                 ),
                                 const SizedBox(height: 16),
                                 Text(
                                   'Analiz görmek için yukarıdan bir kitap seçin',
                                   style: AppTextStyles.body2.copyWith(
-                                    color: AppColors.textSecondary,
+                                    color: AppColors.accent,
                                   ),
                                   textAlign: TextAlign.center,
                                 ),
@@ -392,7 +427,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                                 Text(
                                   'Genel İstatistikler',
                                   style: AppTextStyles.h5.copyWith(
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.accent,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -448,7 +483,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                                 child: Text(
                                   'Kazanım Bazlı Analiz',
                                   style: AppTextStyles.h5.copyWith(
-                                    color: AppColors.textPrimary,
+                                    color: AppColors.accent,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -474,7 +509,7 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                         Text(
                           'Test Geçmişi',
                           style: AppTextStyles.h5.copyWith(
-                            color: AppColors.textPrimary,
+                            color: AppColors.accent,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -542,8 +577,9 @@ class _StudentDetailPageState extends ConsumerState<StudentDetailPage> {
                                                               12),
                                                     ),
                                                     child: Text(
-                                                      history
-                                                          .testTypeDisplayName,
+                                                      history.bookTitle ??
+                                                          history
+                                                              .testTypeDisplayName,
                                                       style: AppTextStyles
                                                           .caption
                                                           .copyWith(

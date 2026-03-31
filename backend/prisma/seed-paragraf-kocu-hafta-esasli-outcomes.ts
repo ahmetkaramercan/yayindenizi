@@ -6,20 +6,20 @@ const BOOK_TITLE = 'Paragraf Koçu (Hafta Esaslı)';
 const MAX_TEST_NO = 160;
 type RawMapping = { testNo: number; questionNo: number; code: string };
 
-const OUTCOMES: { code: string; name: string; category: string }[] = [
-  { code: '21.5.4', name: 'Paragrafın Yorumlanması', category: 'Paragraf Anlam' },
-  { code: '21.5.6', name: 'Paragrafın Konusu', category: 'Paragraf Anlam' },
-  { code: '21.5.2', name: 'Paragrafta Yardımcı Düşünceler', category: 'Paragraf Anlam' },
-  { code: '21.4.2', name: 'Paragrafta Boş Bırakılan Yerleri Tamamlama', category: 'Paragraf Yapısı' },
-  { code: '21.3', name: 'Anlatım Teknikleri ve Düşünceyi Geliştirme Yolları', category: 'Paragraf' },
-  { code: '21.5.1', name: 'Paragrafta Ana Düşünce (Ana Fikir)', category: 'Paragraf Anlam' },
-  { code: '21.4.3', name: 'Paragrafta Anlatım Akışını Bozan Cümle', category: 'Paragraf Yapısı' },
-  { code: '21.5.3', name: 'Paragrafın Karşılık Olduğu Soruyu Belirleme', category: 'Paragraf Anlam' },
-  { code: '21.4.6', name: 'Paragrafta Cümlelerin Yerini Değiştirme', category: 'Paragraf Yapısı' },
-  { code: '21.4.4', name: 'Paragrafa Cümle Yerleştirme', category: 'Paragraf Yapısı' },
-  { code: '21.4.1', name: 'Paragrafı İkiye Ayırma', category: 'Paragraf Yapısı' },
-  { code: '21.4.5', name: 'Cümlelerden Paragraf Oluşturma', category: 'Paragraf Yapısı' },
-  { code: '21.5.10', name: 'Paragrafa Özgü Soru Kökü', category: 'Paragraf Anlam' },
+const OUTCOMES: { code: string; name: string; category: string; videoUrl?: string }[] = [
+  { code: '21.5.4', name: 'Paragrafın Yorumlanması', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=yAIMrUyWSD8' },
+  { code: '21.5.6', name: 'Paragrafın Konusu', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=Nx1xkECAQtI' },
+  { code: '21.5.2', name: 'Paragrafta Yardımcı Düşünceler', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=45BIzjjNwc4' },
+  { code: '21.4.2', name: 'Paragrafta Boş Bırakılan Yerleri Tamamlama', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=gOkfmQJG-LE' },
+  { code: '21.3', name: 'Anlatım Teknikleri ve Düşünceyi Geliştirme Yolları', category: 'Paragraf', videoUrl: 'https://www.youtube.com/watch?v=ufATsi5JP5g' },
+  { code: '21.5.1', name: 'Paragrafta Ana Düşünce (Ana Fikir)', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=WAGnOhMmnEw' },
+  { code: '21.4.3', name: 'Paragrafta Anlatım Akışını Bozan Cümle', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=9gBcWcDLbTw' },
+  { code: '21.5.3', name: 'Paragrafın Karşılık Olduğu Soruyu Belirleme', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=k5Pomqgs1wQ' },
+  { code: '21.4.6', name: 'Paragrafta Cümlelerin Yerini Değiştirme', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=TvR3LEnVfq8' },
+  { code: '21.4.4', name: 'Paragrafa Cümle Yerleştirme', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=YlSmRav0q2M' },
+  { code: '21.4.1', name: 'Paragrafı İkiye Ayırma', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=zNEswhIHT6k' },
+  { code: '21.4.5', name: 'Cümlelerden Paragraf Oluşturma', category: 'Paragraf Yapısı', videoUrl: 'https://www.youtube.com/watch?v=j2N9SOkqRX8' },
+  { code: '21.5.10', name: 'Paragrafa Özgü Soru Kökü', category: 'Paragraf Anlam', videoUrl: 'https://www.youtube.com/watch?v=m5LpEEtKl7g' },
 ];
 
 // testNo (global 1-160) -> cevap anahtarı (A=0, B=1, C=2, D=3, E=4)
@@ -1431,6 +1431,7 @@ async function main() {
       code: o.code,
       name: o.name,
       category: o.category,
+      videoUrl: o.videoUrl ?? null,
       bookId,
     })),
   });

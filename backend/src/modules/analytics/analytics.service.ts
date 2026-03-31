@@ -2,7 +2,10 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Inject,
 } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '@/prisma/prisma.service';
 
 export interface OutcomeStat {
@@ -10,6 +13,7 @@ export interface OutcomeStat {
   code: string;
   learningOutcomeName: string;
   category: string;
+  videoUrl?: string | null;
   totalQuestions: number;
   correctAnswers: number;
   incorrectAnswers: number;
@@ -29,7 +33,10 @@ export interface SectionStat {
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cache: Cache,
+  ) {}
 
   // ─── Helpers ────────────────────────────────────────────────────────────
 
@@ -136,7 +143,7 @@ export class AnalyticsService {
     const rows = await this.prisma.outcomeAnalytics.findMany({
       where,
       include: {
-        learningOutcome: { select: { id: true, code: true, name: true, category: true } },
+        learningOutcome: { select: { id: true, code: true, name: true, category: true, videoUrl: true } },
       },
       orderBy: { accuracy: 'asc' },
     });
@@ -146,6 +153,7 @@ export class AnalyticsService {
       code: r.learningOutcome.code,
       learningOutcomeName: r.learningOutcome.name,
       category: r.learningOutcome.category,
+      videoUrl: (r.learningOutcome as any).videoUrl ?? null,
       totalQuestions: r.totalQuestions,
       correctAnswers: r.correctAnswers,
       incorrectAnswers: r.incorrectAnswers,
@@ -207,7 +215,7 @@ export class AnalyticsService {
     const rows = await this.prisma.outcomeAnalytics.findMany({
       where,
       include: {
-        learningOutcome: { select: { id: true, code: true, name: true, category: true } },
+        learningOutcome: { select: { id: true, code: true, name: true, category: true, videoUrl: true } },
       },
       orderBy: { accuracy: 'asc' },
     });
@@ -217,6 +225,7 @@ export class AnalyticsService {
       code: r.learningOutcome.code,
       learningOutcomeName: r.learningOutcome.name,
       category: r.learningOutcome.category,
+      videoUrl: (r.learningOutcome as any).videoUrl ?? null,
       totalQuestions: r.totalQuestions,
       correctAnswers: r.correctAnswers,
       incorrectAnswers: r.incorrectAnswers,
@@ -262,7 +271,21 @@ export class AnalyticsService {
 
   // ─── Full analysis ──────────────────────────────────────────────────────
 
+  async invalidateUserCache(userId: string) {
+    await this.cache.del(`af:${userId}`);
+  }
+
   async getStudentFullAnalysis(userId: string, bookId?: string) {
+    const cacheKey = bookId ? `af:${userId}:${bookId}` : `af:${userId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this._computeFullAnalysis(userId, bookId);
+    await this.cache.set(cacheKey, result, 300_000);
+    return result;
+  }
+
+  private async _computeFullAnalysis(userId: string, bookId?: string) {
     const [
       overview,
       sectionStats,
@@ -287,6 +310,7 @@ export class AnalyticsService {
       learningOutcomeId: s.learningOutcomeId,
       name: s.learningOutcomeName,
       description: s.category,
+      videoUrl: s.videoUrl ?? null,
       totalQuestions: s.totalQuestions,
       completedQuestions: s.totalQuestions,
       correctAnswers: s.correctAnswers,
@@ -315,6 +339,16 @@ export class AnalyticsService {
   // ─── Section (seviye) analysis ───────────────────────────────────────────
 
   async getSectionAnalysis(userId: string, sectionId: string) {
+    const cacheKey = `as:${userId}:${sectionId}`;
+    const cached = await this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const result = await this._computeSectionAnalysis(userId, sectionId);
+    await this.cache.set(cacheKey, result, 300_000);
+    return result;
+  }
+
+  private async _computeSectionAnalysis(userId: string, sectionId: string) {
     const section = await this.prisma.section.findUnique({
       where: { id: sectionId },
       include: { book: true },
@@ -328,9 +362,9 @@ export class AnalyticsService {
           include: {
             question: {
               include: {
-                learningOutcome: { select: { id: true, code: true, name: true, category: true } },
+                learningOutcome: { select: { id: true, code: true, name: true, category: true, videoUrl: true } },
                 questionOutcomes: {
-                  include: { learningOutcome: { select: { id: true, code: true, name: true, category: true } } },
+                  include: { learningOutcome: { select: { id: true, code: true, name: true, category: true, videoUrl: true } } },
                 },
               },
             },
@@ -341,7 +375,7 @@ export class AnalyticsService {
 
     const outcomeBreakdown = new Map<
       string,
-      { code: string; name: string; category: string; total: number; correct: number }
+      { code: string; name: string; category: string; videoUrl: string | null; total: number; correct: number }
     >();
 
     let totalQuestions = 0;
@@ -370,6 +404,7 @@ export class AnalyticsService {
             code: lo.code,
             name: lo.name,
             category: lo.category,
+            videoUrl: (lo as any).videoUrl ?? null,
             total: 1,
             correct: answer.isCorrect ? 1 : 0,
           });
@@ -383,6 +418,7 @@ export class AnalyticsService {
         learningOutcomeId: id,
         name: data.name,
         description: data.category,
+        videoUrl: data.videoUrl,
         totalQuestions: data.total,
         completedQuestions: data.total,
         correctAnswers: data.correct,
@@ -420,7 +456,7 @@ export class AnalyticsService {
         answers: {
           include: {
             question: {
-              include: { learningOutcome: { select: { id: true, code: true, name: true, category: true } } },
+              include: { learningOutcome: { select: { id: true, code: true, name: true, category: true, videoUrl: true } } },
             },
           },
         },

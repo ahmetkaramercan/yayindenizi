@@ -137,7 +137,8 @@ class AppTheme {
       // Chip Theme
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceDark,
-        selectedColor: AppColors.primaryLight,
+        selectedColor: AppColors.accent.withValues(alpha: 0.18),
+        checkmarkColor: AppColors.accent,
         labelStyle: AppTextStyles.caption,
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
@@ -145,10 +146,18 @@ class AppTheme {
         ),
       ),
 
+      // Tab Bar Theme
+      tabBarTheme: const TabBarThemeData(
+        indicatorColor: AppColors.accent,
+        labelColor: AppColors.accent,
+        unselectedLabelColor: AppColors.textSecondary,
+        indicatorSize: TabBarIndicatorSize.tab,
+      ),
+
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: AppColors.surface,
-        selectedItemColor: AppColors.primary,
+        selectedItemColor: AppColors.accent,
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,

@@ -85,6 +85,10 @@ export class AuthService {
     return this.usersService.findById(userId);
   }
 
+  async deleteAccount(userId: string) {
+    return this.usersService.deleteUser(userId);
+  }
+
   // ─── Token generation ──────────────────────────────────────────────────
 
   private async generateTokenPair(

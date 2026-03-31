@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../../core/widgets/cards/app_card.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_text_styles.dart';
@@ -97,6 +98,18 @@ class SectionAnalysisPage extends ConsumerWidget {
                             ..sort((a, b) =>
                                 b.completedQuestions.compareTo(a.completedQuestions));
 
+                          // En çok yanlış yapılan (videoUrl'ı olan) kazanımlar
+                          final videoRecommendations = (analysis
+                                  .learningOutcomeProgress.values
+                                  .toList()
+                                ..sort((a, b) => b.incorrectAnswers
+                                    .compareTo(a.incorrectAnswers)))
+                              .where((p) =>
+                                  p.learningOutcome.videoUrl != null &&
+                                  p.incorrectAnswers > 0)
+                              .take(3)
+                              .toList();
+
                           return SingleChildScrollView(
                             padding: const EdgeInsets.all(AppConstants.paddingM),
                             child: Column(
@@ -144,6 +157,12 @@ class SectionAnalysisPage extends ConsumerWidget {
                                     ],
                                   ),
                                 ),
+                                if (videoRecommendations.isNotEmpty) ...[
+                                  const SizedBox(height: AppConstants.paddingL),
+                                  _VideoRecommendationsSection(
+                                    recommendations: videoRecommendations,
+                                  ),
+                                ],
                                 const SizedBox(height: AppConstants.paddingL),
                                 Text(
                                   'Kazanım Bazlı Analiz',
@@ -169,6 +188,147 @@ class SectionAnalysisPage extends ConsumerWidget {
     if (percentage >= 60) return AppColors.info;
     if (percentage >= 40) return AppColors.warning;
     return AppColors.error;
+  }
+}
+
+class _VideoRecommendationsSection extends StatelessWidget {
+  final List<LearningOutcomeProgress> recommendations;
+
+  const _VideoRecommendationsSection({required this.recommendations});
+
+  String _extractVideoId(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return '';
+    return uri.queryParameters['v'] ?? '';
+  }
+
+  Future<void> _openVideo(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.play_circle_outline, color: AppColors.error, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              'Sana Özel Videolar',
+              style: AppTextStyles.h5.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'En çok yanlış yaptığın konulara özel ders videoları',
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppConstants.paddingM),
+        ...recommendations.map((p) {
+          final videoUrl = p.learningOutcome.videoUrl!;
+          final videoId = _extractVideoId(videoUrl);
+          final thumbnailUrl =
+              'https://img.youtube.com/vi/$videoId/hqdefault.jpg';
+          return Padding(
+            padding:
+                const EdgeInsets.only(bottom: AppConstants.paddingM),
+            child: InkWell(
+              onTap: () => _openVideo(videoUrl),
+              borderRadius: BorderRadius.circular(12),
+              child: AppCard(
+                padding: EdgeInsets.zero,
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Image.network(
+                            thumbnailUrl,
+                            width: 120,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                              width: 120,
+                              height: 80,
+                              color: AppColors.error.withValues(alpha: 0.1),
+                              child: Icon(Icons.play_circle_outline,
+                                  color: AppColors.error, size: 36),
+                            ),
+                          ),
+                          Container(
+                            width: 120,
+                            height: 80,
+                            color: Colors.black26,
+                            child: const Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 36,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              p.learningOutcome.name,
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Icon(Icons.cancel,
+                                    size: 14, color: AppColors.error),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${p.incorrectAnswers} yanlış',
+                                  style: AppTextStyles.caption.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Icon(Icons.chevron_right,
+                          color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }),
+      ],
+    );
   }
 }
 
@@ -244,7 +404,7 @@ class _LearningOutcomeCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.info.withOpacity(0.2),
+                      color: AppColors.info.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -263,7 +423,7 @@ class _LearningOutcomeCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: _getSuccessColor(progress.successPercentage)
-                          .withOpacity(0.2),
+                          .withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(

@@ -28,6 +28,11 @@ class BookRepository {
     return sections.cast<Map<String, dynamic>>();
   }
 
+  Future<List<Map<String, dynamic>>> getBookOutcomeVideos(String bookId) async {
+    final data = await _api.get('/books/$bookId/videos');
+    return (data as List).cast<Map<String, dynamic>>();
+  }
+
   Future<List<Map<String, dynamic>>> getSectionTests(String sectionId) async {
     final data = await _api.get('/sections/$sectionId');
     final map = data as Map<String, dynamic>;
@@ -43,11 +48,12 @@ class BookRepository {
       if (rawImagePath.startsWith('http://') ||
           rawImagePath.startsWith('https://')) {
         networkImageUrl = rawImagePath;
-      } else if (rawImagePath.startsWith('assets/') ||
-          rawImagePath.startsWith('photos/')) {
+      } else if (rawImagePath.startsWith('assets/')) {
         assetImage = rawImagePath;
+      } else if (rawImagePath.startsWith('photos/')) {
+        assetImage = rawImagePath.replaceFirst('photos/', 'assets/images/books/');
       } else {
-        assetImage = 'photos/$rawImagePath';
+        assetImage = 'assets/images/books/$rawImagePath';
       }
     }
 

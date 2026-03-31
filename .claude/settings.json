@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter doctor -v)",
+      "Bash(flutter build appbundle --release --no-shrink)",
+      "Bash(flutter build appbundle --release --split-debug-info=/tmp/debug_info)",
+      "Bash(flutter build appbundle --release -v)",
+      "Bash(/Users/ahmet/Library/Android/sdk/cmdline-tools/latest/bin/apkanalyzer --version)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" flutter build appbundle --release)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew bundleRelease)",
+      "Read(//opt/homebrew/share/android-commandlinetools/cmdline-tools/latest/**)",
+      "Bash(flutter --version)",
+      "Bash(flutter clean)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew compileFlutterBuildRelease --info)",
+      "Bash(flutter assemble --no-version-check --output build/app/intermediates/flutter/release -dTargetFile=lib/main.dart -dTargetPlatform=android -dBuildMode=release -dAndroidArchs=\"android-arm android-arm64 android-x64\" -dMinSdkVersion=24 android_aot_bundle_release_android-arm android_aot_bundle_release_android-arm64 android_aot_bundle_release_android-x64)",
+      "Bash(flutter pub get)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" ./gradlew clean bundleRelease)",
+      "Bash(JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\" /Users/ahmet/Library/Android/sdk/build-tools/35.0.0/aapt2 dump --values /Users/ahmet/Documents/projeler/yayindenizi/build/app/outputs/bundle/release/app-release.aab)",
+      "Bash(unzip -p /Users/ahmet/Documents/projeler/yayindenizi/build/app/outputs/bundle/release/app-release.aab BundleConfig.pb)",
+      "Bash(unzip -p /Users/ahmet/Documents/projeler/yayindenizi/build/app/outputs/bundle/release/app-release.aab base/manifest/AndroidManifest.xml)",
+      "Bash(unzip -p /Users/ahmet/Documents/projeler/yayindenizi/build/app/outputs/bundle/release/app-release.aab \"BUNDLE-METADATA/com.android.tools.build.gradle/app-metadata.properties\")",
+      "Bash(xargs cat)"
+    ]
+  }
+}

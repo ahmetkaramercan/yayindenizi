@@ -69,132 +69,138 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.paddingL),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 40),
-                // Logo
-                Center(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset(
-                        'assets/images/logo/yayin_denizi_logo.jpeg',
-                        height: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Top Image - Full width, no top gap
+            ClipRect(
+              child: Align(
+                alignment: Alignment.topCenter,
+                heightFactor: 0.55,
+                child: Image.asset(
+                  'assets/images/logo/login_foto.jpeg',
+                  width: double.infinity,
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Hesabınıza giriş yapın',
-                  style: AppTextStyles.body1.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 40),
-                // Email Field
-                AppTextField(
-                  label: 'Email',
-                  hint: 'ornek@email.com',
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                ),
-                const SizedBox(height: AppConstants.paddingM),
-                // Password Field
-                AppTextField(
-                  label: 'Şifre',
-                  hint: 'Şifrenizi girin',
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  validator: Validators.password,
-                  prefixIcon: const Icon(Icons.lock_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppConstants.paddingL),
-                // Login Button
-                AppButton(
-                  text: 'Giriş Yap',
-                  onPressed: loginState.isLoading ? null : _handleLogin,
-                  isLoading: loginState.isLoading,
-                  isFullWidth: true,
-                  type: AppButtonType.primary,
-                ),
-                const SizedBox(height: AppConstants.paddingM),
-                // Register Options
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      'Hesabınız yok mu? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/register/student'),
-                      child: Text(
-                        'Öğrenci Kayıt',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      'Öğretmen misiniz? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push('/register/teacher'),
-                      child: Text(
-                        'Öğretmen Kayıt',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
+            // Form content
+            Padding(
+              padding: const EdgeInsets.only(
+                left: AppConstants.paddingL,
+                right: AppConstants.paddingL,
+                bottom: AppConstants.paddingL,
+              ),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Hesabınıza giriş yapın',
+                      style: AppTextStyles.body1.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    // Email Field
+                    AppTextField(
+                      label: 'Email',
+                      hint: 'ornek@email.com',
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: Validators.email,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                    ),
+                    const SizedBox(height: AppConstants.paddingM),
+                    // Password Field
+                    AppTextField(
+                      label: 'Şifre',
+                      hint: 'Şifrenizi girin',
+                      controller: _passwordController,
+                      obscureText: _obscurePassword,
+                      validator: Validators.password,
+                      prefixIcon: const Icon(Icons.lock_outlined),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: AppConstants.paddingL),
+                    // Login Button
+                    AppButton(
+                      text: 'Giriş Yap',
+                      onPressed: loginState.isLoading ? null : _handleLogin,
+                      isLoading: loginState.isLoading,
+                      isFullWidth: true,
+                      type: AppButtonType.primary,
+                    ),
+                    const SizedBox(height: AppConstants.paddingM),
+                    // Register Options
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          'Hesabınız yok mu? ',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/register/student'),
+                          child: Text(
+                            'Öğrenci Kayıt',
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          'Öğretmen misiniz? ',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/register/teacher'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.accent,
+                          ),
+                          child: Text(
+                            'Öğretmen Kayıt',
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.accent,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

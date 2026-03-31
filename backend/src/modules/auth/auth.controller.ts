@@ -1,6 +1,7 @@
 import {
   Controller,
   Post,
+  Delete,
   Body,
   Get,
   HttpCode,
@@ -60,5 +61,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   logout() {
     return { message: 'Logged out successfully' };
+  }
+
+  @Delete('account')
+  @HttpCode(HttpStatus.OK)
+  deleteAccount(@CurrentUser('id') userId: string) {
+    return this.authService.deleteAccount(userId);
   }
 }

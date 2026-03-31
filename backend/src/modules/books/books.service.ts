@@ -50,6 +50,15 @@ export class BooksService {
     return book;
   }
 
+  async getBookOutcomeVideos(id: string) {
+    const outcomes = await this.prisma.learningOutcome.findMany({
+      where: { bookId: id, videoUrl: { not: null } },
+      select: { id: true, code: true, name: true, category: true, videoUrl: true },
+      orderBy: { code: 'asc' },
+    });
+    return outcomes;
+  }
+
   async update(id: string, dto: UpdateBookDto) {
     await this.findOne(id);
     return this.prisma.book.update({ where: { id }, data: dto });

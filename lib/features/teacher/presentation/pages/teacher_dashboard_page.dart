@@ -60,6 +60,42 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
     }
   }
 
+  Future<void> _showDeleteAccountDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hesabı Sil'),
+        content: const Text(
+          'Hesabınızı silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz. Tüm verileriniz kalıcı olarak silinecektir.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('İptal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Hesabımı Sil'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      try {
+        ref.read(invalidateUserProvidersProvider)();
+        await sl<AuthRepository>().deleteAccount();
+        if (mounted) context.pushReplacement('/login');
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Hesap silinemedi. Lütfen tekrar deneyin.')),
+          );
+        }
+      }
+    }
+  }
+
   Future<void> _confirmDeleteClassroom(String classroomId, String name) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -98,13 +134,38 @@ class _TeacherDashboardPageState extends ConsumerState<TeacherDashboardPage> {
             onPressed: () => context.push('/teacher/student-analysis'),
             tooltip: 'Öğrenci Analizi',
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              ref.read(invalidateUserProvidersProvider)();
-              await sl<AuthRepository>().logout();
-              if (context.mounted) context.pushReplacement('/login');
+          PopupMenuButton<String>(
+            onSelected: (value) async {
+              if (value == 'logout') {
+                ref.read(invalidateUserProvidersProvider)();
+                await sl<AuthRepository>().logout();
+                if (context.mounted) context.pushReplacement('/login');
+              } else if (value == 'delete') {
+                await _showDeleteAccountDialog();
+              }
             },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, size: 20),
+                    SizedBox(width: 8),
+                    Text('Çıkış Yap'),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+                    const SizedBox(width: 8),
+                    Text('Hesabımı Sil', style: TextStyle(color: AppColors.error)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

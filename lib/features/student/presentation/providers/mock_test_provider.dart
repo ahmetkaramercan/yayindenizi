@@ -6,6 +6,7 @@ import '../../domain/entities/mock_test_result.dart';
 import '../../domain/utils/test_result_calculator.dart';
 import '../../../../core/di/injection_container.dart';
 import '../../data/repositories/test_repository.dart';
+import 'student_analysis_provider.dart';
 
 class MockTestState {
   final List<MockTest> tests;
@@ -44,7 +45,8 @@ class MockTestState {
 }
 
 class MockTestNotifier extends StateNotifier<MockTestState> {
-  MockTestNotifier() : super(MockTestState());
+  final Ref _ref;
+  MockTestNotifier(this._ref) : super(MockTestState());
 
   final _testRepo = sl<TestRepository>();
   final List<MockTestResult> _savedResults = [];
@@ -278,6 +280,7 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
         answers: answerList,
         totalTime: 0,
       );
+      _ref.invalidate(studentAnalysisProvider);
       dev.log('Test result submitted for test $testId', name: 'MockTestNotifier');
     } catch (e) {
       dev.log('Failed to submit test result: $e', name: 'MockTestNotifier');
@@ -287,5 +290,5 @@ class MockTestNotifier extends StateNotifier<MockTestState> {
 
 final mockTestProvider =
     StateNotifierProvider<MockTestNotifier, MockTestState>((ref) {
-  return MockTestNotifier();
+  return MockTestNotifier(ref);
 });
